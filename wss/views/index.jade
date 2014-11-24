@@ -11,11 +11,3 @@ block content
     | This is another way to do 
     | a freaking paragraph.
   div#gamescreen
-  script(type='text/javascript').
-   $( document ).ready( function() {
-     console.log( "ready!" );
-     $.getScript( 'javascripts/WssMain.js', function()
-       {
-         onInit();
-       });
-   });
