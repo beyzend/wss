@@ -14,9 +14,7 @@ function Entity( id , animation ) {
 var AREA_WIDTH = 640;
 var AREA_HEIGHT = 480;
 
-function loadCustomMap( mapTiles ) {
-    
-    
+function loadMap( jsonMap ) {
     
     var tileAnims = [];
     
@@ -55,7 +53,7 @@ function loadCustomMap( mapTiles ) {
     
 }
 
-$(function() {
+require([], function(){
     
     var playerAnimation = new $.gQ.Animation({
         imageURL : "images/art/ironhand.png",
@@ -117,5 +115,4 @@ $(function() {
 
     $.playground().startGame(function() {
     });
-}); 
-
+});
