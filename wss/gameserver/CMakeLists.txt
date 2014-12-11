@@ -16,15 +16,11 @@
 #*/
 cmake_minimum_required(VERSION 2.8)
 
-#Get around ubuntu libzmqpp not creating symbolic link .so
-if(UNIX)
-  SET(CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".so.3" ".a")
-endif(UNIX)
-
 project(WssServer)
 
 include_directories("/usr/include/i386-linux-gnu/c++/4.8/") 
-#include_directories("/usr/include")
+
+set( CMAKE_CXX_FLAGS "-std=c++11" )
 
 if (CMAKE_BUILD_TYPE STREQUAL "")
   # CMake defaults to leaving CMAKE_BUILD_TYPE empty. This screws up
