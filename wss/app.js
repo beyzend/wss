@@ -33,10 +33,6 @@ var io = require('socket.io')(server);
 var total_temp = 0;
 var temps = 0;
     
-    
-    
-    
-    
 io.on('connection', function(socket) {
     socket.emit('news', {
         hello : 'world'
@@ -64,10 +60,19 @@ io.on('connection', function(socket) {
     });
     
     
+    
     subscriber.on('message', function(data) {
-        var pieces = data.data;
-        console.log("message: " + data.toString());
+       // Pretend we're doing some marshalling here, send it off as json.
+       var pieces = data.toString().split(" ");
+       socket.emit('regionData', {
+           ids : pieces
+       }); 
     });
+        
+  
+            
+            
+    
 });
 
 

@@ -50,7 +50,6 @@ require(["/javascripts/map.js"], function(Map) {
         height : 18
     }).end();
 
-    
     $(document).keydown(function(e) {
 
         var map = $("#mapTiles");
@@ -84,7 +83,7 @@ require(["/javascripts/map.js"], function(Map) {
                 my : 'data'
             });
         });
-        var mapTiles = $("#mapTiles");
+
         socket.on('map', function(data) {
             // pretend to load map right now. We need to manually load data.map.
             console.log(data.map);
@@ -93,6 +92,20 @@ require(["/javascripts/map.js"], function(Map) {
             map.addTilemapToGroup(mapGroup, "testmap", data.map);
 
         });
+
+        var regionData = {};
+        socket.on('regionData', function(data) {
+            // pretend play with data.
+            for (i = 0; i < data.ids.length; ++i) {
+                regionData[data.ids[i]] = data.ids[i];
+            }
+            
+            console.log( "regionData" + data.ids);
+
+        });
+
+        //socket.on
+
     });
 
 });

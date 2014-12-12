@@ -22,20 +22,16 @@ void regionDataPublisher(zmqpp::socket &publisher, std::vector<int> &entities) {
 		stringstream entityStream;
 
 		for (auto entity : entities) {
-			entityStream << "Id:" << entity;
+			entityStream << entity << " ";
 		}
-
 		std::string outString = entityStream.str();
-		std::cout << outString << std::endl;
+		//std::cout << outString << std::endl;
 		publisher.send(outString);
 
-		//std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 
-}
-
-void hello() {
-	std::cout << "FUCK YOU ALL" << std::endl;
 }
 
 int main(int argc, char** argv) {
