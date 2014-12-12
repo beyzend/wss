@@ -66,34 +66,8 @@ io.on('connection', function(socket) {
     
     subscriber.on('message', function(data) {
         var pieces = data.data;
-        //var zipcode = parseInt(pieces[0], 10);
-        //var zipcode = parseInt(data.toString().split(""), 10);
-        //var temperature = parseInt(pieces[1], 10);
-        //var relhumidity = parseInt(pieces[2], 10);
-        
         console.log("message: " + data.toString());
-        //console.log("message zipcode: " + zipcode);
-        
-        /*
-        this.temps += 1;
-                this.total_temp += temperature;
-                console.log("got message!" + zipcode + " " + temperature);
-                if (temps === 100) {
-                    console.log([
-                        "Average temperature for zipcode '",
-                        filter,
-                        "' was ",
-                        (this.total_temp / this.temps).toFixed(2),
-                        " F"].join(""));
-                        this.total_temp = 0;
-                        this.temps = 0;
-                }*/
-        
     });
-    
-    
-    
-
 });
 
 

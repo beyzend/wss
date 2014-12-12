@@ -21,6 +21,7 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/dist")
 
 find_library(LIB_ZMQ zmq)
 find_library(LIB_ZMQPP zmqpp)
+find_library(LIB_PTHREAD pthread)
 
 file(GLOB_RECURSE HDRS "include/*.h")
 file(GLOB_RECURSE SRCS "src/*.cpp")
@@ -34,7 +35,7 @@ add_executable(WssServer WIN32 ${HDRS} ${SRCS})
 
 set_target_properties(WssServer PROPERTIES DEBUG_POSTFIX _d)
  
-target_link_libraries(WssServer ${LIB_ZMQ} ${LIB_ZMQPP})
+target_link_libraries(WssServer ${LIB_ZMQ} ${LIB_ZMQPP} ${LIB_PTHREAD})
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist/bin)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist/media)
