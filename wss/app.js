@@ -5,47 +5,97 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var fs = require( "fs" ),
-    json;
+var fs = require("fs"), json;
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
-
 
 var app = express();
 
 var debug = require('debug')('wss');
 app.set('port', process.env.PORT || 3000);
 
-
 var server = app.listen(3000, function() {
-  debug('Express server listening on port ' + server.address().port);
+    debug('Express server listening on port ' + server.address().port);
 });
 
+// Setup ZMQ
+var zmq = require('zmq');
+    
+var subscriber = zmq.socket('sub');
+    
+console.log("Collecting updates from weather server...");
+subscriber.subscribe("");
+subscriber.connect("tcp://127.0.0.1:4200");
+
+// Setup socket
 var io = require('socket.io')(server);
+var total_temp = 0;
+var temps = 0;
+    
+    
+    
+    
+    
+io.on('connection', function(socket) {
+    socket.emit('news', {
+        hello : 'world'
+    });
+    socket.on('my other event', function(data) {
+        console.log(data);
+    });
 
-io.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
-  });
-  
-  function readJsonFileSync( filepath, encoding ) {
-    if ( typeof ( encoding ) == 'undefined' ){
-        encoding = 'utf8';
+    function readJsonFileSync(filepath, encoding) {
+        if ( typeof (encoding ) == 'undefined') {
+            encoding = 'utf8';
+        }
+        var file = fs.readFileSync(filepath, encoding);
+        return JSON.parse(file);
     }
-    var file = fs.readFileSync( filepath, encoding );
-    return JSON.parse( file );
-  }
 
-  function loadTestMapSync( filePath, encoding ) {
-    var file = fs.readFileSync( filePath, ( typeof ( encoding ) === 'undefined' ? 'utf8' : encoding ) );
-    return JSON.parse( file );
-  }
+    function loadTestMapSync(filePath, encoding) {
+        var file = fs.readFileSync(filePath, ( typeof (encoding ) === 'undefined' ? 'utf8' : encoding ));
+        return JSON.parse(file);
+    }
 
-  socket.emit( 'map', { map: loadTestMapSync( __dirname + '/public/images/art/test.json' ) } );
- 
+
+    socket.emit('map', {
+        map : loadTestMapSync(__dirname + '/public/images/art/test.json')
+    });
+    
+    
+    subscriber.on('message', function(data) {
+        var pieces = data.data;
+        //var zipcode = parseInt(pieces[0], 10);
+        //var zipcode = parseInt(data.toString().split(""), 10);
+        //var temperature = parseInt(pieces[1], 10);
+        //var relhumidity = parseInt(pieces[2], 10);
+        
+        console.log("message: " + data.toString());
+        //console.log("message zipcode: " + zipcode);
+        
+        /*
+        this.temps += 1;
+                this.total_temp += temperature;
+                console.log("got message!" + zipcode + " " + temperature);
+                if (temps === 100) {
+                    console.log([
+                        "Average temperature for zipcode '",
+                        filter,
+                        "' was ",
+                        (this.total_temp / this.temps).toFixed(2),
+                        " F"].join(""));
+                        this.total_temp = 0;
+                        this.temps = 0;
+                }*/
+        
+    });
+    
+    
+    
+
 });
+
 
 
 // view engine setup
@@ -56,15 +106,14 @@ app.set('view engine', 'jade');
 //app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+    extended : false
+}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
 app.use('/users', users);
-
-
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -81,8 +130,8 @@ if (app.get('env') === 'development') {
     app.use(function(err, req, res, next) {
         res.status(err.status || 500);
         res.render('error', {
-            message: err.message,
-            error: err
+            message : err.message,
+            error : err
         });
     });
 }
@@ -92,10 +141,9 @@ if (app.get('env') === 'development') {
 app.use(function(err, req, res, next) {
     res.status(err.status || 500);
     res.render('error', {
-        message: err.message,
-        error: {}
+        message : err.message,
+        error : {}
     });
 });
-
 
 module.exports = app;

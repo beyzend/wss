@@ -1,22 +1,9 @@
-#/*
-#-----------------------------------------------------------------------------
-#Filename:    CMakeLists.txt
-#-----------------------------------------------------------------------------
-#
-#This source file is part of the
-#   ___                 __    __ _ _    _ 
-#  /___\__ _ _ __ ___  / / /\ \ (_) | _(_)
-# //  // _` | '__/ _ \ \ \/  \/ / | |/ / |
-#/ \_// (_| | | |  __/  \  /\  /| |   <| |
-#\___/ \__, |_|  \___|   \/  \/ |_|_|\_\_|
-#      |___/                              
-#      Tutorial Framework
-#      http://www.ogre3d.org/tikiwiki/
-#-----------------------------------------------------------------------------
-#*/
 cmake_minimum_required(VERSION 2.8)
 
 project(WssServer)
+
+set(SRCS "")
+set(HDRS "")
 
 include_directories("/usr/include/i386-linux-gnu/c++/4.8/") 
 
@@ -32,32 +19,23 @@ set(CMAKE_DEBUG_POSTFIX "_d")
  
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/dist")
 
-
- 
 find_library(LIB_ZMQ zmq)
 find_library(LIB_ZMQPP zmqpp)
-
-set(HDRS "")
-set(SRCS "")
-
-#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/include")
-#add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 file(GLOB_RECURSE HDRS "include/*.h")
 file(GLOB_RECURSE SRCS "src/*.cpp")
 
 message("${HDRS}")
 message("${SRCS}")
-message("$SRCS")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
 
 add_executable(WssServer WIN32 ${HDRS} ${SRCS})
- 
+
 set_target_properties(WssServer PROPERTIES DEBUG_POSTFIX _d)
  
 target_link_libraries(WssServer ${LIB_ZMQ} ${LIB_ZMQPP})
- 
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist/bin)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist/media)
  
