@@ -64,6 +64,7 @@ io.on('connection', function(socket) {
     subscriber.on('message', function(data) {
        // Pretend we're doing some marshalling here, send it off as json.
        var pieces = data.toString().split(" ");
+       
        socket.emit('regionData', {
            ids : pieces
        }); 
