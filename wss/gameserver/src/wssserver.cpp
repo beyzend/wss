@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
 
 	std::vector<Entity> entities;
 
-	generateRandomEntities(100, glm::vec2(0, 0), glm::vec2(240, 240), entities);
+	generateRandomEntities(100, glm::vec2(0, 0), glm::vec2(100, 100), entities);
 
 	zmqpp::context context;
 

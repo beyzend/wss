@@ -5,19 +5,16 @@
 // blockCoords.x = (idx - blockCoords.y * 16.0);
 // }
 
-function Entity(id, animation) {
-    this.id = id;
-    this.animation = animation;
-}
+var SCREEN_WIDTH = 640;
+var SCREEN_HEIGHT = 480;
 
-var AREA_WIDTH = 640;
-var AREA_HEIGHT = 480;
-
-require(["/javascripts/map.js"], function(Map) {
+require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region) {
 
     $.data["map"] = Map;
+    $.data["region"] = Region;
 
-    var playerAnimation = new $.gQ.Animation({
+
+    playerAnimation = new $.gQ.Animation({
         imageURL : "images/art/ironhand.png",
         numberOfFrame : 1,
         delta : 18,
@@ -27,71 +24,37 @@ require(["/javascripts/map.js"], function(Map) {
         offsety : 0 * 18
     });
 
-    var playerEntity = new Entity(1, playerAnimation);
+    
 
     $("#gamescreen").playground({
-        width : AREA_WIDTH,
-        height : AREA_HEIGHT,
+        width : SCREEN_WIDTH,
+        height : SCREEN_HEIGHT,
         refreshRate : 60,
         keyTracker : true
     }).addGroup("mapTiles", {
-        width : 640,
-        height : 480
+        width : SCREEN_WIDTH,
+        height : SCREEN_HEIGHT
     })
     //.importTilemaps( "images/art/test.json" )
-    .end().addGroup("player", {
-        posx : AREA_WIDTH / 2,
-        posy : AREA_HEIGHT / 2,
-        width : 18,
-        height : 18
-    }).addSprite("player", {
+    .end()
+    .addGroup("entities", {
+        posx : 0, 
+        posy : 0, 
+        width : SCREEN_WIDTH,
+        height : SCREEN_HEIGHT
+    }).end();
+    /*
+    .addSprite("player", {
         animation : playerAnimation,
         width : 18,
         height : 18
     }).end();
-
-    $(document).keydown(function(e) {
-
-        var map = $("#mapTiles");
-
-        switch ( e.keyCode ) {
-        case 65:
-            // this is left
-            map.x(1, true);
-            break;
-        case 87:
-            // this is up
-            map.y(1, true);
-            break;
-        case 68:
-            // this is right
-            map.x(-1, true);
-            console.log("going right!");
-            break;
-        case 83:
-            // this is down
-            map.y(-1, true);
-            break;
-        }
-    });
+    */
     
-    var regionModule = {
-        regionData: {},
-        entityState: "",
-        
-        updateEntityPosition: function(index, entityPosition) {
-            this.regionData[entityPosition.id] = [entityPosition.x, entityPosition.y];
-        },
-        
-        updateEntityState: function(id, position) {
-          this.entityState += "id: " + position;  
-        }
-    };
 
-    $.playground().registerCallback(function(){
-       console.log(regionModule.entityState); 
-    },30);
-    
+    $.playground().registerCallback(function() {
+    }, 30);
+
     $.playground().startGame(function() {
         var socket = io.connect('http://localhost:3000');
         socket.on('news', function(data) {
@@ -100,29 +63,86 @@ require(["/javascripts/map.js"], function(Map) {
                 my : 'data'
             });
         });
-
+        
+        function addSprite(group, id, position, animation) {
+            group.addSprite(id, {
+               animation: animation,
+               width: 18,
+               height: 18,
+               posx: position[0],
+               posy: position[1] 
+            });
+        }
+        
+        
+        
         socket.on('map', function(data) {
             // pretend to load map right now. We need to manually load data.map.
             console.log(data.map);
             var mapGroup = $("#mapTiles");
             var map = $.data["map"];
             map.addTilemapToGroup(mapGroup, "testmap", data.map);
+            
+            // pre-allocate entities
+            var entityGroup = $("#entities");
+            var regionData = {};
+            // Initialize player to initial position (in world-space).
+            var playerPosition = [data.map.width * data.map.tilewidth / 2,
+                 data.map.height * data.map.tileheight / 2];
+            regionData[-1] = playerPosition;
+            addSprite(entityGroup, -1, playerPosition, playerAnimation);
+            
+            //Hack: we want to pool sprites & entities so we pre-allocate them in someway before 
+            //we receive messages from server. Now just assume server ids are from 0 to 99 and just preallocate
+            //then now.
+            for (i = 0; i < 100; ++i) {
+                var position = [0, 0];
+                regionData[i] = position;
+                addSprite(entityGroup, i, position, playerAnimation);
+            }
+            
+            var region = $.data['region'];
+            region.init(regionData);
+            
+            // Setup 
+            $(document).keydown(function(e) {
+
+                var region = $.data["region"];
+                
+                switch ( e.keyCode ) {
+                case 65:
+                    // this is left
+                    region.updatePositionRelative(-1, [-1, 0]);    
+                    break;
+                case 87:
+                    // this is up
+                    region.updatePositionRelative(-1, [0, -1]);
+                    break;
+                case 68:
+                    // this is right
+                    region.updatePositionRelative(-1, [1, 0]);
+                    break;
+                case 83:
+                    // this is down
+                    region.updatePositionRelative(-1, [0, 1]);
+                    break;
+                }
+            });
 
         });
-        
+
         socket.on('regionData', function(data) {
+            var region = $.data["region"];
             // synethetic play with data.
-            $.each(data.positions, regionModule.updateEntityPosition.bind(regionModule));
+            $.each(data.positions, region.updateEntityPositions.bind(region));
             
-            // Clear the current entity state first.
-            regionModule.entityState = "";
-            $.each(regionModule.regionData, regionModule.updateEntityState.bind(regionModule));
-             
+            // update sprites
+            var sprites = $("#entities").children("div");
+            region.updateSprites([SCREEN_WIDTH/2.0, SCREEN_HEIGHT/2.0]);     
+       
         });
-        
-        console.log("regionModule.entityState"); 
+
+        console.log("regionModule.entityState");
     });
-    
-    
 
 });
