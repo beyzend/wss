@@ -74,7 +74,24 @@ require(["/javascripts/map.js"], function(Map) {
             break;
         }
     });
+    
+    var regionModule = {
+        regionData: {},
+        entityState: "",
+        
+        updateEntityPosition: function(index, entityPosition) {
+            this.regionData[entityPosition.id] = [entityPosition.x, entityPosition.y];
+        },
+        
+        updateEntityState: function(id, position) {
+          this.entityState += "id: " + position;  
+        }
+    };
 
+    $.playground().registerCallback(function(){
+       console.log(regionModule.entityState); 
+    },30);
+    
     $.playground().startGame(function() {
         var socket = io.connect('http://localhost:3000');
         socket.on('news', function(data) {
@@ -92,20 +109,20 @@ require(["/javascripts/map.js"], function(Map) {
             map.addTilemapToGroup(mapGroup, "testmap", data.map);
 
         });
-
-        var regionData = {};
+        
         socket.on('regionData', function(data) {
-            // pretend play with data.
-            for (i = 0; i < data.ids.length; ++i) {
-                regionData[data.ids[i]] = data.ids[i];
-            }
+            // synethetic play with data.
+            $.each(data.positions, regionModule.updateEntityPosition.bind(regionModule));
             
-            console.log( "regionData" + data.ids);
-
+            // Clear the current entity state first.
+            regionModule.entityState = "";
+            $.each(regionModule.regionData, regionModule.updateEntityState.bind(regionModule));
+             
         });
-
-        //socket.on
-
+        
+        console.log("regionModule.entityState"); 
     });
+    
+    
 
 });

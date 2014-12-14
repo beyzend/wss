@@ -76,17 +76,6 @@ void regionDataPublisher(zmqpp::socket &publisher, std::vector<Entity> &entities
 
 	while (1) {
 
-		stringstream entityStream;
-
-		for (auto entity : entities) {
-			entityStream << entity.id << ":" << entity.position.x << ":" << entity.position.y << " ";
-		}
-		std::string outString = entityStream.str();
-		//std::cout << outString << std::endl;
-		publisher.send(outString);
-
-
-
 		// Test document
 		rapidjson::Document document;
 		document.SetObject();
@@ -95,11 +84,11 @@ void regionDataPublisher(zmqpp::socket &publisher, std::vector<Entity> &entities
 
 		rapidjson::StringBuffer sb;
 
-		rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
+		rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
 
 		document.Accept(writer);
 
-		cout << "entity json: " << sb.GetString() << endl;
+		publisher.send(sb.GetString());
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
