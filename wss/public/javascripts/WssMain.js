@@ -101,10 +101,15 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
             regionData[playerId] = playerPosition;
             addSprite(entityGroup, playerId, playerPosition, playerAnimation);
             
+            // synthetic add player event for now
+            socket.emit('AddEntityEvent', {
+               type: 1 
+            });
+            
             //Hack: we want to pool sprites & entities so we pre-allocate them in someway before 
             //we receive messages from server. Now just assume server ids are from 0 to 99 and just preallocate
             //then now.
-            for (i = 0; i < 100; ++i) {
+            for (i = 0; i < 200; ++i) {
                 var position = [0, 0];
                 regionData[i] = position;
                 addSprite(entityGroup, i, position, playerAnimation);

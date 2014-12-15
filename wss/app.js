@@ -24,9 +24,12 @@ var zmq = require('zmq');
     
 var subscriber = zmq.socket('sub');
     
-console.log("Collecting updates from weather server...");
+console.log("Subscribing to region data");
 subscriber.subscribe("");
 subscriber.connect("tcp://127.0.0.1:4200");
+
+var requester = zmq.socket('req');
+console.log("Connecting to region requester");
 
 // Setup socket
 var io = require('socket.io')(server);
@@ -66,6 +69,46 @@ io.on('connection', function(socket) {
        var jsonData = JSON.parse(data.toString());
        socket.emit('regionData', jsonData);
     });
+    
+    requester.connect("tcp://localhost:4201");
+    
+    requester.on('message', function(data) {
+        // Received a reply.
+        //var reponse = data.toString();
+        console.log("request message received!");
+        console.log("server reply: " + data.toString());
+        // if (response.type === 1) {
+            // console.log("AddEntity response received! Server reply: " + response);
+        // }
+        // else if (response.type === 2) {
+            // console.log("RemoveEntity response received!");
+        // }
+    });
+    // Since both client and server is javascript we can just define 
+    //compatible Objects.
+    socket.on('AddEntityEvent', function(data) {
+        console.log("AddEntityEvent")
+        var addEntityRequest = {
+            "type": 1,
+            "data": {
+                
+            }
+        };
+        
+        requester.send(JSON.stringify(addEntityRequest)); 
+    });
+    
+    socket.on('RemoveEntityEvent', function(data) {
+        var removeEntityRequest = {
+            "type": 2,
+            "data": {
+                "id": data.id
+            }
+        };
+        
+        requester.send(JSON.stringify(removeEntityRequest));
+    });
+     
 });
 
 
