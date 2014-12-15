@@ -13,6 +13,10 @@ define(function() {
         this.regionData[id] = position;
     }
     
+    function getPosition(id) {
+        return this.regionData[id];
+    }
+    
     function init(regionData) {
         this.regionData = regionData;
     }
@@ -32,19 +36,11 @@ define(function() {
         sprite.y(y);
     }
     
-    function updateSprites(cameraPosition) {
+    function render(cameraPosition, thisRegion) {
         // Get player position
-        var playerPosition = this.regionData[-1];    
-        this.cameraPosition = [-playerPosition[0] + cameraPosition[0], -playerPosition[1] + cameraPosition[1]];
+        this.cameraPosition = cameraPosition;
         // I'm not sure how most efficiently to upate the sprites right now.
         $.each(this.regionData, transformSprite.bind(this));
-        
-        var mapGroup = $("#mapTiles");
-        
-        //update map
-        mapGroup.x(this.cameraPosition[0]);
-        mapGroup.y(this.cameraPosition[1]);
-        
     }
     
     return {
@@ -52,7 +48,8 @@ define(function() {
       updatePositionRelative: updatePositionRelative,
       updatePosition: updatePosition,
       updateEntityPositions: updateEntityPositions,
-      updateSprites: updateSprites  
+      render: render,
+      getPosition: getPosition  
     };
   
 });

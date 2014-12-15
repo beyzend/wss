@@ -8,6 +8,8 @@
 var SCREEN_WIDTH = 640;
 var SCREEN_HEIGHT = 480;
 
+var playerId = -1;
+
 require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region) {
 
     $.data["map"] = Map;
@@ -74,9 +76,16 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
             });
         }
         
+        function getCameraPosition(playerId, region) {
+            var playerPosition = region.getPosition(playerId);
+            return [-playerPosition[0] + SCREEN_WIDTH/2.0, -playerPosition[1] + SCREEN_HEIGHT/2.0];
+        }
+        
+        
         
         
         socket.on('map', function(data) {
+            
             // pretend to load map right now. We need to manually load data.map.
             console.log(data.map);
             var mapGroup = $("#mapTiles");
@@ -89,8 +98,8 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
             // Initialize player to initial position (in world-space).
             var playerPosition = [data.map.width * data.map.tilewidth / 2,
                  data.map.height * data.map.tileheight / 2];
-            regionData[-1] = playerPosition;
-            addSprite(entityGroup, -1, playerPosition, playerAnimation);
+            regionData[playerId] = playerPosition;
+            addSprite(entityGroup, playerId, playerPosition, playerAnimation);
             
             //Hack: we want to pool sprites & entities so we pre-allocate them in someway before 
             //we receive messages from server. Now just assume server ids are from 0 to 99 and just preallocate
@@ -103,6 +112,20 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
             
             var region = $.data['region'];
             region.init(regionData);
+            
+            // render the map
+            var cameraPosition = getCameraPosition(playerId, region);
+            
+            
+            $.fn.render = function(cameraPosition, mapGroup) {
+                mapGroup.x(cameraPosition[0]);
+                mapGroup.y(cameraPosition[1]);
+            };
+            
+            var mapGroup = $("#mapTiles");
+            
+            
+            mapGroup.render(cameraPosition, mapGroup);
             
             // Setup 
             $(document).keydown(function(e) {
@@ -127,18 +150,23 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
                     region.updatePositionRelative(-1, [0, 1]);
                     break;
                 }
+                
+                var playerPosition = region.getPosition(playerId);
+                var mapGroup = $("#mapTiles");
+                var cameraPosition = getCameraPosition(playerId, region);
+                
+                mapGroup.render(cameraPosition, mapGroup);
+                region.render(cameraPosition, region);
+                
             });
 
         });
 
         socket.on('regionData', function(data) {
             var region = $.data["region"];
-            // synethetic play with data.
+       
             $.each(data.positions, region.updateEntityPositions.bind(region));
-            
-            // update sprites
-            var sprites = $("#entities").children("div");
-            region.updateSprites([SCREEN_WIDTH/2.0, SCREEN_HEIGHT/2.0]);     
+            region.render(getCameraPosition(playerId, region), region);
        
         });
 
