@@ -99,7 +99,7 @@ void regionDataPublisher(zmqpp::socket &publisher, std::vector<Entity> &entities
 
 		publisher.send(sb.GetString());
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/5));
 	}
 
 }
@@ -109,15 +109,34 @@ size_t uniqueId()
 	return atomicId++;
 }
 
-void addEntity(zmqpp::socket &requestSocket, const rapidjson::Value &value, std::vector<Entity> &entities)
+void addEntityWithReply(zmqpp::socket &requestSocket, const rapidjson::Value &value, std::vector<Entity> &entities)
 {
 	size_t id = uniqueId();
 	std::cout << "Add entity with id: " << id << std::endl;
-	std::lock_guard<std::recursive_mutex> lock(mutex);
+	std::unique_lock<std::recursive_mutex> lock(mutex);
 	entities.push_back(Entity(id, glm::vec2(within(250), within(250))));
+	lock.unlock();
+
+	// Send reply
+	rapidjson::Document replyRoot;
+	replyRoot.SetObject();
+	rapidjson::Document::AllocatorType& allocator = replyRoot.GetAllocator();
+
+	replyRoot.AddMember("type", 1, allocator);
+	replyRoot.AddMember("id", id, allocator);
+
+	rapidjson::StringBuffer sb;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+
+	replyRoot.Accept(writer);
+
+	std::cout << "replying add entity: " << sb.GetString() << std::endl;
+
+	requestSocket.send(sb.GetString());
+
 }
 
-void removeEntity(zmqpp::socket &requestSocket, const rapidjson::Value &data, std::vector<Entity> &entities)
+void removeEntityWithReply(zmqpp::socket &requestSocket, const rapidjson::Value &data, std::vector<Entity> &entities)
 {
 	//{ "id":int }
 	const rapidjson::Value &idValue =  data["id"];
@@ -158,11 +177,11 @@ void regionRequestHandler(zmqpp::socket &requestSocket, std::vector<Entity> &ent
 			{
 				rapidjson::Value& data = requestRoot["data"];
 				assert(data.IsObject()); //Except over here
+
 				switch(type.GetUint())
 				{
 				case ADD_ENTITY:
-					addEntity(requestSocket, data, entities);
-					requestSocket.send("Entity added!"); //reply
+					addEntityWithReply(requestSocket, data, entities);
 					break;
 				default:
 					break;

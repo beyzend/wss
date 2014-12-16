@@ -74,15 +74,18 @@ io.on('connection', function(socket) {
     
     requester.on('message', function(data) {
         // Received a reply.
-        //var reponse = data.toString();
-        console.log("request message received!");
-        console.log("server reply: " + data.toString());
-        // if (response.type === 1) {
-            // console.log("AddEntity response received! Server reply: " + response);
-        // }
-        // else if (response.type === 2) {
+        
+        var response = JSON.parse(data);
+        console.log("request message data" + data);
+        console.log("request message received!\n" + response.id);
+        if (response.type === 1) {
+            socket.emit('EntityAddedEvent', {
+               id: response.id 
+            });
+        }
+        else if (response.type === 2) {
             // console.log("RemoveEntity response received!");
-        // }
+        }
     });
     // Since both client and server is javascript we can just define 
     //compatible Objects.
