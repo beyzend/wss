@@ -18,9 +18,11 @@
 
 #include <glm/vec2.hpp>
 
-#include "rapidjson/document.h"
+#include <rapidjson/document.h>
 #include "rapidjson/prettywriter.h"
 #include "rapidjson/filestream.h"
+
+#include "wss/Path.h"
 
 #define within(num) (int) ((float) num * random () / (RAND_MAX + 1.0))
 
@@ -213,7 +215,10 @@ void generateRandomEntities(size_t numOfEntities, glm::vec2 start, glm::vec2 end
 int main(int argc, char** argv) {
 	using namespace std;
 
+	using namespace glm;
+
 	cout << "Starting ZeroMQ server..." << endl;
+	wss::Path path;
 
 	std::vector<Entity> entities;
 
