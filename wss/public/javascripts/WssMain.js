@@ -1,9 +1,3 @@
-// void ComputeBlockXY(float uvX, out float2 blockCoords)
-// {
-// float idx = uvX * 256.0 - 1;
-// blockCoords.y = floor(idx / 16.0);
-// blockCoords.x = (idx - blockCoords.y * 16.0);
-// }
 
 var SCREEN_WIDTH = 640;
 var SCREEN_HEIGHT = 480;

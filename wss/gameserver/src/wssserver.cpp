@@ -218,7 +218,22 @@ int main(int argc, char** argv) {
 	using namespace glm;
 
 	cout << "Starting ZeroMQ server..." << endl;
-	wss::Path path;
+
+	cout << "Constructing map!" << endl;
+
+	std::vector<unsigned int> map;
+
+	const size_t width = 10, height = 10;
+	for (size_t y = 0; y < height; ++y)
+	{
+		for (size_t x = 0; x < width; ++x)
+		{
+			map.push_back(1); //type id 1 block.
+		}
+	}
+
+	wss::Path path(width, height, map);
+
 
 	std::vector<Entity> entities;
 
