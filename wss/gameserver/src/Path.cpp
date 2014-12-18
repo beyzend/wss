@@ -12,6 +12,7 @@
 #include <glm/vec2.hpp>
 
 #include "wss/Path.h"
+#include "wss/Utils.h"
 
 using namespace wss;
 
@@ -26,30 +27,44 @@ float Path::LeastCostEstimate(void* stateStart, void* stateEnd)
 	size_t startIndex = (size_t)static_cast<size_t*>(stateStart);
 	size_t endIndex = (size_t)static_cast<size_t*>(stateEnd);
 
+	//assert
+
 	return (glm::vec2(startIndex % mapWidth, startIndex / mapWidth) - glm::vec2(endIndex % mapWidth, endIndex / mapWidth)).length();
 
 }
 
 void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent)
 {
+
 	size_t currentIndex = (size_t)(state);
-	size_t topLeftCornerIndex = (currentIndex / mapWidth - 1) * mapWidth;
 
-	// get adjacent squares.
-	std::vector<std::vector<size_t>> rows = {{0,1,2},{0,2},{0,1,2}};
-	size_t rowCount = 0;
+	// Clip
+	size_t x, y;
+	wss::Utils::indexToXY(currentIndex, mapWidth, x, y);
 
+	assert(x < mapWidth && y < mapHeight);
 
-	std::for_each(rows.begin(), rows.end(), [&rowCount, topLeftCornerIndex](std::vector<size_t> row){
-		std::for_each(row.begin(), row.end(), [&rowCount, topLeftCornerIndex](size_t col){
+	// top left corner.
+	size_t sx, sy, ex, ey;
+
+	sx = (x == 0) ? x : x - 1;
+	ex = (x >= mapWidth) ? mapWidth - 1 : x + 1;
+	sy = (y == 0) ? y : y - 1;
+	ey = (y >= mapWidth) ? mapHeight - 1 : y + 1;
+
+	// Generate the adjacent cells
+	for (size_t cy = sy; cy <= ey; ++cy) {
+		for (size_t cx = sx; cx <= ex; ++cx) {
+			if (cx == x && cy == y) // X marks the spot
+				continue;
 			micropather::StateCost stateCost;
-			float cost = (glm::vec2(1, 1) - glm::vec2(col, rowCount)).length();
-			size_t state = rowCount * 3 + col;
-			stateCost.state = (void*)(topLeftCornerIndex + state);
+
+			float cost = (glm::vec2(x, y) - glm::vec2(cx, cy)).length();
+			stateCost.state = (void*)(wss::Utils::XYToIndex(cx, cy, mapWidth));
 			stateCost.cost = cost;
-		});
-		rowCount++;
-	});
+			adjacent->push_back(stateCost);
+		}
+	}
 }
 
 void Path::PrintStateInfo(void* state)

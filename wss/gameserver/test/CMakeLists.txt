@@ -5,7 +5,7 @@ include_directories(${test_SOURCE_DIR}/src/include}
   ${WssServer_SOURCE_DIR}/include)
 
 
-#set( CMAKE_CXX_FLAGS "-std=c++11" )
+set( CMAKE_CXX_FLAGS "-std=c++11" )
 
 include_directories("${CMAKE_SOURCE_DIR}/test/include")
 include_directories("${CMAKE_SOURCE_DIR}/include/")
