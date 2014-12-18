@@ -54,7 +54,6 @@ void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent
 
 void Path::PrintStateInfo(void* state)
 {
-	//blah;
 }
 
 

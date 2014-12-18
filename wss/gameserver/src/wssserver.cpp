@@ -214,7 +214,6 @@ void generateRandomEntities(size_t numOfEntities, glm::vec2 start, glm::vec2 end
 
 int main(int argc, char** argv) {
 	using namespace std;
-
 	using namespace glm;
 
 	cout << "Starting ZeroMQ server..." << endl;
@@ -232,9 +231,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
+
+
 	wss::Path path(width, height, map);
-
-
 	std::vector<Entity> entities;
 
 	generateRandomEntities(100, glm::vec2(0, 0), glm::vec2(100, 100), entities);

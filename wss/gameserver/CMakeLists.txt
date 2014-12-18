@@ -4,7 +4,7 @@ project(WssServer)
 
 #include_directories("/usr/include/i386-linux-gnu/c++/4.8/") 
 
-set( CMAKE_CXX_FLAGS "-std=c++11" )
+#set( CMAKE_CXX_FLAGS "-std=c++11" )
 
 if (CMAKE_BUILD_TYPE STREQUAL "")
   # CMake defaults to leaving CMAKE_BUILD_TYPE empty. This screws up
@@ -20,9 +20,13 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/dist")
 #file(GLOB_RECURSE HDRS "include/*.h")
 
 add_subdirectory(src)
+add_subdirectory(test)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist/bin)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist/media)
+
+enable_testing()
+add_test(NAME TestPath COMMAND TestPath)
  
 
 

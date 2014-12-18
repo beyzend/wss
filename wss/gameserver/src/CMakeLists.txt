@@ -2,21 +2,27 @@ find_library(LIB_ZMQ zmq)
 find_library(LIB_ZMQPP zmqpp)
 find_library(LIB_PTHREAD pthread)
 
+set( CMAKE_CXX_FLAGS "-std=c++11" )
 
 include_directories("${CMAKE_SOURCE_DIR}/include")
+include_directories("${CMAKE_SOURCE_DIR}/include/micropather")
 #include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include/wss")
 #include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include/rapidjson")
 
 file(GLOB_RECURSE SRCS "*.cpp")
 
-add_executable(WssServer WIN32 ${SRCS})
-#Test1.cpp Test2.cpp wssserver.cpp)
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/)
+list(REMOVE_ITEM SRCS "wssserver.cpp" 
+)
 
+add_library(WssServerLib ${SRCS})
+
+add_executable(WssServer WIN32 wssserver.cpp)
+
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/)
 
 set_target_properties(WssServer PROPERTIES DEBUG_POSTFIX _d)
  
-target_link_libraries(WssServer ${LIB_ZMQ} ${LIB_ZMQPP} ${LIB_PTHREAD})
+target_link_libraries(WssServer WssServerLib ${LIB_ZMQ} ${LIB_ZMQPP} ${LIB_PTHREAD})
 
 # post-build copy for win32
 if(WIN32 AND NOT MINGW)

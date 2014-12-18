@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wss/micropather.h"
+#include "micropather/micropather.h"
 
 namespace wss {
 
