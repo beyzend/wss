@@ -7,6 +7,9 @@
 
 #include <vector>
 #include <memory>
+#include <algorithm>
+
+#include <iostream>
 
 #include "glm/vec2.hpp"
 #include "gtest.h"
@@ -24,19 +27,17 @@ protected:
 
 	virtual void SetUp() {
 
-		const size_t width = 10;
-		const size_t height = 10;
 
-		for (int y = 0; y < height; ++y)
+		for (int y = 0; y < mapHeight; ++y)
 		{
-			for (int x = 0; x < width; ++x)
+			for (int x = 0; x < mapWidth; ++x)
 			{
 				map.push_back(1);
 			}
 		}
 
 
-		path0.reset(new wss::Path(10, 10, map));
+		path0.reset(new wss::Path(mapWidth, mapHeight, map));
 
 
 	}
@@ -56,6 +57,9 @@ protected:
 	std::vector<unsigned int> map;
 
 	std::unique_ptr<wss::Path> path0;
+
+	size_t mapWidth = 10;
+	size_t mapHeight = 10;
 
 };
 
@@ -85,20 +89,57 @@ TEST_F(PathTest, TestLowCost) {
 
 TEST_F(PathTest, TestAdjacentCost) {
 
-	MP_VECTOR<micropather::StateCost> adj;
-
-	size_t state;
-	xyToIndex(0, 0, state, 100);
-	glm::vec2 stateVec(0, 0);
-
-	path0->AdjacentCost((void*)state, &adj);
+	using namespace glm;
 
 	// Assuming cells: [1, 0], [0, 1], [1, 1]
-	ASSERT_EQ(adj.size(), 3);
 
-	ASSERT_EQ(adj[0].cost, (stateVec - glm::vec2(1, 0)).length());
-	ASSERT_EQ(adj[1].cost, (stateVec - glm::vec2(0, 1)).length());
-	ASSERT_EQ(adj[2].cost, (stateVec - glm::vec2(1, 1)).length());
+	auto checkCells = [this](vec2 stateVec, std::vector<vec2> &cells){
+
+		MP_VECTOR<micropather::StateCost> adj;
+
+		size_t state;
+		xyToIndex(stateVec.x, stateVec.y, state, mapWidth);
+		path0->AdjacentCost((void*)state, &adj);
+
+		ASSERT_EQ(adj.size(), cells.size());
+
+		for (auto stateCost : adj) {
+			// Find this cell.
+			size_t x, y;
+			indexToXY((size_t)stateCost.state, x, y, mapWidth);
+			vec2 stateCell(x, y);
+
+			auto iterator = std::find_if(cells.begin(), cells.end(), [stateCell](vec2 cell) {
+				return (stateCell == cell);
+			});
+
+			ASSERT_NE(cells.end(), iterator);
+			ASSERT_EQ(stateCost.cost, (stateVec - stateCell).length());
+		}
+	};
+	std::vector<vec2> cells = {vec2(1, 0), vec2(0, 1), vec2(1, 1)};
+	checkCells(vec2(0, 0), cells);
+
+	cells = {vec2(0,0), vec2(1,0), vec2(2,0),
+			vec2(0,1), vec2(2,1),
+			vec2(0,2), vec2(1,2), vec2(2,2)
+	};
+
+	checkCells(vec2(1, 1), cells);
+
+	cells = {vec2(mapWidth - 2, 0),
+			vec2(mapWidth - 2, 1), vec2(mapWidth - 1, 1)
+	};
+
+	checkCells(vec2(mapWidth - 1, 0), cells);
+
+	cells = {vec2(mapWidth - 2, 0), vec2(mapWidth - 1, 0),
+		vec2(mapWidth - 2, 1), //state cell
+		vec2(mapWidth - 2, 2), vec2(mapWidth - 1, 2)
+	};
+
+	checkCells(vec2(mapWidth - 1, 1), cells);
+
 }
 
 

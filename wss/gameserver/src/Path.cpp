@@ -48,9 +48,9 @@ void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent
 	size_t sx, sy, ex, ey;
 
 	sx = (x == 0) ? x : x - 1;
-	ex = (x >= mapWidth) ? mapWidth - 1 : x + 1;
+	ex = (x >= mapWidth - 1) ? mapWidth - 1 : x + 1;
 	sy = (y == 0) ? y : y - 1;
-	ey = (y >= mapWidth) ? mapHeight - 1 : y + 1;
+	ey = (y >= mapWidth - 1) ? mapHeight - 1 : y + 1;
 
 	// Generate the adjacent cells
 	for (size_t cy = sy; cy <= ey; ++cy) {
