@@ -13,7 +13,7 @@ define( function () {
        for ( y = 0; y < atlasHeight; ++y ) {
            for ( x = 0; x < atlasWidth; ++x ) {
                tileAnims.push( new $.gQ.Animation( {
-                   imageURL : tileset.image,
+                   imageURL : "/images/art/"+tileset.image,
                    numOfFrame : 1,
                    delta : tileset.tilewidth,
                    distance : 0,

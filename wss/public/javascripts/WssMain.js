@@ -1,6 +1,6 @@
 
-var SCREEN_WIDTH = 640;
-var SCREEN_HEIGHT = 480;
+var SCREEN_WIDTH = 1280;
+var SCREEN_HEIGHT = 720;
 
 require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region) {
 
@@ -9,7 +9,7 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
     $.data["playerId"] = 0;
 
     playerAnimation = new $.gQ.Animation({
-        imageURL : "images/art/ironhand.png",
+        imageURL : "images/art/ironhand_diagonal.png",
         numberOfFrame : 1,
         delta : 18,
         distance : 0,
@@ -23,8 +23,9 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
     $("#gamescreen").playground({
         width : SCREEN_WIDTH,
         height : SCREEN_HEIGHT,
-        refreshRate : 60,
-        keyTracker : true
+        refreshRate : 30,
+        keyTracker : true,
+        scale: 2.0
     }).addGroup("mapTiles", {
         width : SCREEN_WIDTH,
         height : SCREEN_HEIGHT
@@ -37,6 +38,10 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
         width : SCREEN_WIDTH,
         height : SCREEN_HEIGHT
     }).end();
+    
+    
+    //$("#gamescreen").scale(2.0);
+    
     /*
     .addSprite("player", {
         animation : playerAnimation,
@@ -80,7 +85,6 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
             var mapGroup = $("#mapTiles");
             var map = $.data["map"];
             map.addTilemapToGroup(mapGroup, "testmap", data.map);
-            
             // pre-allocate entities
             var entityGroup = $("#entities");
             var regionData = {};
@@ -93,16 +97,17 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
             
             socket.on("EntityAddedEvent", function(data) {
                 var region = $.data['region'];
+                
                 console.log("EntityAddedEvent data: " + data.id);
                 
                 // Initialize player to initial position (in world-space).
-                $.data["playerId"] = data.id;
+                $.data["playerId"] = 50;//data.id;
                 addSprite(entityGroup, playerId, [0, 0], playerAnimation);
                 
                 //Hack: we want to pool sprites & entities so we pre-allocate them in someway before 
                 //we receive messages from server. Now just assume server ids are from 0 to 99 and just preallocate
                 //then now.
-                for (i = 0; i < 200; ++i) {
+                for (i = 0; i < 380; ++i) {
                     var state = [0, 0, false];
                     regionData[i] = state;
                     addSprite(entityGroup, i, state, playerAnimation);
@@ -165,7 +170,7 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
                     down[e.keyCode] = true;
                     break;
                 }
-                var playerId = $.data["playerId"];s
+                var playerId = $.data["playerId"];
                 var playerPosition = region.getPosition(playerId);
                 var mapGroup = $("#mapTiles");
                 var cameraPosition = getCameraPosition(playerId, region);

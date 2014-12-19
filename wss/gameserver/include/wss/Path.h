@@ -4,7 +4,7 @@
 
 namespace wss {
 
-class Path : micropather::Graph
+class Path : public micropather::Graph
 {
 public:
 	Path(unsigned int mapWidth, unsigned int mapHeight, const std::vector<unsigned int>& map);

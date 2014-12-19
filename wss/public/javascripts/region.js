@@ -26,7 +26,9 @@ define(function() {
     }
     
     function updateEntityPositions(index, entityPosition) {
-        this.regionData[entityPosition.id] = [entityPosition.x, entityPosition.y, true];
+        //console.log("updateEntity position: " + entityPosition.x + ", " + entityPosition.y);
+        this.regionData[entityPosition.id] = [entityPosition.x * 18.0, entityPosition.y * 18.0, true];
+        
     };
     
     function transformSprite(key, position) {
