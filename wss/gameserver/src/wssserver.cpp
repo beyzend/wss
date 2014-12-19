@@ -104,9 +104,9 @@ void serializeEntities(rapidjson::Document &root, std::vector<Entity*> &entities
 void regionDataPublisher(zmqpp::socket &publisher, std::vector<Entity*> &entities) {
 	using namespace std;
 
-	std::chrono::high_resolution_clock clock;
+	std::chrono::steady_clock clock;
 
-	std::vector< std::chrono::time_point< std::chrono::high_resolution_clock > > startTimes;
+	std::vector< std::chrono::time_point< std::chrono::steady_clock > > startTimes;
 
 	for (auto entity : entities)
 	{
@@ -114,14 +114,13 @@ void regionDataPublisher(zmqpp::socket &publisher, std::vector<Entity*> &entitie
 	}
 
 	const double TIME_PER_NODE = 1.0/5.0;
-
-
+	std::chrono::duration<double, std::ratio<1,5> > constantTime;
 	size_t processed = 0;
 
 	while (1) {
 
-		std::chrono::time_point< std::chrono::high_resolution_clock > start = clock.now();
-
+		//std::chrono::time_point< std::chrono::steady_clock > start = clock.now();
+		auto start = clock.now();
 		// Update path
 		{
 			std::lock_guard<std::recursive_mutex> lock(::mutex);
@@ -136,7 +135,7 @@ void regionDataPublisher(zmqpp::socket &publisher, std::vector<Entity*> &entitie
 						entity->paths = 0;
 					}
 					else { // still has node to traverse
-						std::chrono::time_point<std::chrono::high_resolution_clock> now = clock.now();
+						std::chrono::time_point<std::chrono::steady_clock> now = clock.now();
 
 						std::chrono::duration<double> elapsed = now - startTimes[entity->id];
 						if (elapsed.count() > TIME_PER_NODE) {
@@ -167,9 +166,8 @@ void regionDataPublisher(zmqpp::socket &publisher, std::vector<Entity*> &entitie
 		publisher.send(sb.GetString());
 
 		std::chrono::duration<double> elapsed = clock.now() - start;
-
-		if (elapsed.count() < 1.0/5.0)
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000/5 - (size_t)(elapsed.count() * 1000.0)));
+		if (elapsed.count() < 1.0/2.0)
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000/2 - (size_t)(elapsed.count() * 1000.0)));
 	}
 
 }
@@ -297,9 +295,12 @@ void regionAIUpdater(std::vector<Entity*> &entities, std::vector<PathEntity*> &p
 		for (auto pathEntity : pathEntities) {
 			if (pathEntity->traversingPath) {
 				{
-					std::lock_guard<std::recursive_mutex> lock(mutex);
-					if (entities[pathEntity->id]->paths == 0) {
-						pathEntity->traversingPath = false;
+					std::unique_lock<std::recursive_mutex> lock(mutex, std::try_to_lock);
+
+					if (lock.owns_lock()) {
+						if (entities[pathEntity->id]->paths == 0) {
+							pathEntity->traversingPath = false;
+						}
 					}
 				}
 
@@ -318,8 +319,10 @@ void regionAIUpdater(std::vector<Entity*> &entities, std::vector<PathEntity*> &p
 				pathNodes[pathEntity->id]->clear();
 				pather.Solve((void*) stateStart, (void*) stateEnd, pathNodes[pathEntity->id], &totalCost);
 				{
-					std::lock_guard<std::recursive_mutex> lock(mutex);
-					entities[pathEntity->id]->paths = pathNodes[pathEntity->id];
+					std::unique_lock<std::recursive_mutex> lock(mutex, std::try_to_lock);
+					if (lock.owns_lock()) {
+						entities[pathEntity->id]->paths = pathNodes[pathEntity->id];
+					}
 				}
 
 			}
@@ -360,7 +363,7 @@ int main(int argc, char** argv) {
 	std::vector<size_t> playerIds;
 	std::vector<PathEntity*> pathEntities;
 
-	generateRandomEntities(280, glm::vec2(30, 30), glm::vec2(70, 70), entities, pathEntities);
+	generateRandomEntities(50, glm::vec2(30, 30), glm::vec2(70, 70), entities, pathEntities);
 
 	zmqpp::context context;
 

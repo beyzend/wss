@@ -101,13 +101,13 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
                 console.log("EntityAddedEvent data: " + data.id);
                 
                 // Initialize player to initial position (in world-space).
-                $.data["playerId"] = 50;//data.id;
+                $.data["playerId"] = 11;//data.id;
                 addSprite(entityGroup, playerId, [0, 0], playerAnimation);
                 
                 //Hack: we want to pool sprites & entities so we pre-allocate them in someway before 
                 //we receive messages from server. Now just assume server ids are from 0 to 99 and just preallocate
                 //then now.
-                for (i = 0; i < 380; ++i) {
+                for (i = 0; i < 80; ++i) {
                     var state = [0, 0, false];
                     regionData[i] = state;
                     addSprite(entityGroup, i, state, playerAnimation);
