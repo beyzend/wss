@@ -24,14 +24,17 @@ Path::Path(unsigned int mapWidth, unsigned int mapHeight, const std::vector<unsi
 
 float Path::LeastCostEstimate(void* stateStart, void* stateEnd)
 {
+	using namespace std;
 	//right now use distance to test.
-	size_t startIndex = (size_t)static_cast<size_t*>(stateStart);
-	size_t endIndex = (size_t)static_cast<size_t*>(stateEnd);
+	int startIndex = (int)(stateStart);
+	int endIndex = (int)(stateEnd);
 
-	//assert
+	glm::vec2 start;
+	glm::vec2 end;
+	wss::Utils::indexToXY(startIndex, mapWidth, start);
+	wss::Utils::indexToXY(endIndex, mapWidth, end);
 
-	return glm::length((glm::vec2(startIndex % mapWidth, startIndex / mapWidth) - glm::vec2(endIndex % mapWidth, endIndex / mapWidth)));
-
+	return glm::length(start - end);
 }
 
 void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent)
@@ -40,7 +43,7 @@ void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent
 	size_t currentIndex = (size_t)(state);
 
 	// Clip
-	size_t x, y;
+	int x, y;
 	wss::Utils::indexToXY(currentIndex, mapWidth, x, y);
 
 	assert(x < mapWidth && y < mapHeight);

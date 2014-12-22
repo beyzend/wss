@@ -185,18 +185,15 @@ void traversePath(PATH_FIND_NODE &pathFindNode, std::vector<PathEntity*> &pathEn
 					entities[pathEntity->id]->traversing.store(true);
 
 				}
-				else {
-					if (entities[pathEntity->id]->pathNodes == 0) {
-						entities[pathEntity->id]->traversing.store(false);
-						pathEntity->traversing.store(false);
-						// load the last path. need to change this behavior later.
-						size_t currentIndex = (size_t)(*pathEntity->pathNodes)[pathEntity->pathNodes->size()-1];
-						//wss::Utils::indexToXY(currentIndex, MAP_W, pathEntity->position);
-						pathEntity->position = entities[pathEntity->id]->position;
-						//pathEntity->pathNodes->clear();
+				else if(entities[pathEntity->id]->pathNodes == 0) {
 
-
-					}
+					entities[pathEntity->id]->traversing.store(false);
+					pathEntity->traversing.store(false);
+					// load the last path. need to change this behavior later.
+					size_t currentIndex = (size_t) (*pathEntity->pathNodes)[pathEntity->pathNodes->size() - 1];
+					//wss::Utils::indexToXY(currentIndex, MAP_W, pathEntity->position);
+					pathEntity->position = entities[pathEntity->id]->position;
+					//pathEntity->pathNodes->clear();
 				}
 			}
 			else {
@@ -232,14 +229,14 @@ int main(int argc, char** argv) {
 	std::vector<PathEntity*> pathEntities;
 
 	glm::vec2 start(30,30), end(80,50);
-	for (size_t i = 0; i < 950; ++i) {
+	for (size_t i = 0; i < 300; ++i) {
 		glm::vec2 position = randomPosition(start, end);
 		pathEntities.push_back(new PathEntity(i, position));
 		entities.push_back(new Entity(i, position));
 	}
 
 	// Path generator node. This node will input ID_PATH and generate an path then output it.
-	PATH_FIND_NODE pathGenerator(g, 100, [=](PathEntity* pathEntity)->PathEntity* {
+	PATH_FIND_NODE pathGenerator(g, 200, [=](PathEntity* pathEntity)->PathEntity* {
 		return pathEntity;
 	});
 
@@ -254,7 +251,7 @@ int main(int argc, char** argv) {
 
 
 	// Path return node. This node will take input ID_PATH and return it to it's corresponding path entity.
-	PATH_FIND_NODE returnPathNode(g, 20, [&map](PathEntity* pathEntity)->PathEntity*{
+	PATH_FIND_NODE returnPathNode(g, 200, [&map](PathEntity* pathEntity)->PathEntity*{
 		wss::Path path(MAP_W, MAP_H, map);
 		micropather::MicroPather pather(&path);
 		//cout << "solving path for id: " << pathEntity->id << endl;
@@ -263,9 +260,9 @@ int main(int argc, char** argv) {
 		size_t stateStart, stateEnd;
 		//cout << "path start: " << pathEntity->position.x << ", " << pathEntity->position.y << endl;
 		stateStart = wss::Utils::XYToIndex(pathEntity->position.x, pathEntity->position.y, MAP_W);
-		stateEnd = wss::Utils::XYToIndex(30 + within(50), 30 + within(40), MAP_W);
+		stateEnd = wss::Utils::XYToIndex(within(200), within(200), MAP_W );
 
-		size_t startX,startY,endX,endY;
+		int startX,startY,endX,endY;
 
 		wss::Utils::indexToXY(stateStart, MAP_W, startX, startY);
 		wss::Utils::indexToXY(stateEnd, MAP_W, endX, endY);
