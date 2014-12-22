@@ -8,12 +8,13 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
-
+#include <tuple>
 
 #include <zmqpp/zmqpp.hpp>
 
 #include <tbb/flow_graph.h>
 #include <tbb/concurrent_vector.h>
+#include <tbb/concurrent_queue.h>
 #include <glm/vec2.hpp>
 
 #include <thread>
@@ -68,8 +69,8 @@ struct PathEntity {
 
 };
 
-using PATH_FIND_NODE = tbb::flow::function_node<PathEntity*, PathEntity*>;
-
+using PATH_FIND_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2>, PathEntity*>;
+using PATH_SOLVE_NODE = tbb::flow::function_node<PathEntity*, PathEntity*>;
 
 
 glm::vec2 randomPosition(glm::vec2 start, glm::vec2 end) {
@@ -117,30 +118,45 @@ void serializeEntities(rapidjson::Document &root, size_t start, size_t end, tbb:
 }
 
 
-void regionDataPublisher(zmqpp::socket &publisher, tbb::concurrent_vector<Entity*> entities) {
+void regionDataPublisher(zmqpp::socket &publisher, PATH_FIND_NODE &pathFindNode, tbb::concurrent_queue<PathEntity*> &solvedPathQueue, tbb::concurrent_vector<Entity*> entities) {
 	using namespace std;
 
 	std::chrono::steady_clock clock;
 
+	// Initialize path.
+	for (auto entity : entities) {
+		pathFindNode.try_put(std::tuple<size_t, glm::vec2>(entity->id, entity->position));
+	}
+
 	while (1) {
 		auto start = clock.now();
+
+		// Grab a bunch fo path
+		{
+			//size_t size = entities.size();
+			for (size_t i = 0; i < 200; ++i) {
+				PathEntity* pathEntity;
+				if (solvedPathQueue.try_pop(pathEntity)) {
+					entities[pathEntity->id]->pathNodes = pathEntity->pathNodes;
+					entities[pathEntity->id]->currentNode = 0;
+				}
+			}
+		}
+
 		// Traverse nodes
 		{
 			for (auto entity : entities) {
-
-				if (entity->traversing.load() == true ) {
-					if (entity->currentNode >= entity->pathNodes->size()) {
-						entity->pathNodes = 0;
-					}
-					else {
+				if (entity->pathNodes != 0) {
+					if (entity->currentNode < entity->pathNodes->size()) {
 						size_t currentIndex = (size_t)(*entity->pathNodes)[entity->currentNode++];
 						//wss::Utils::indexToXY(currentIndex, MAP_W, entity->position);
-						size_t x, y;
 						wss::Utils::indexToXY(currentIndex, MAP_W, entity->position);
-						//cout << "current position: " << x << ", " << y << endl;
+					}
+					else {
+						entity->pathNodes = 0;
+						pathFindNode.try_put(std::tuple<size_t, glm::vec2>(entity->id, entity->position));
 					}
 				}
-
 			}
 		}
 
@@ -165,53 +181,6 @@ void regionDataPublisher(zmqpp::socket &publisher, tbb::concurrent_vector<Entity
 	}
 }
 
-void traversePath(PATH_FIND_NODE &pathFindNode, std::vector<PathEntity*> &pathEntities, tbb::concurrent_vector<Entity*> entities) {
-	using namespace std;
-
-	std::chrono::steady_clock clock;
-
-	while (1) {
-		auto start = clock.now();
-		// Loop through pathEntities.
-		{
-		for (auto pathEntity : pathEntities) {
-			if (pathEntity->traversing.load() == true) {
-
-				if (entities[pathEntity->id]->traversing.load() == false) { // Begin entity path traversal. Later on this can be a message.
-
-					entities[pathEntity->id]->currentNode = 0;
-
-					entities[pathEntity->id]->pathNodes = pathEntity->pathNodes;
-					entities[pathEntity->id]->traversing.store(true);
-
-				}
-				else if(entities[pathEntity->id]->pathNodes == 0) {
-
-					entities[pathEntity->id]->traversing.store(false);
-					pathEntity->traversing.store(false);
-					// load the last path. need to change this behavior later.
-					size_t currentIndex = (size_t) (*pathEntity->pathNodes)[pathEntity->pathNodes->size() - 1];
-					//wss::Utils::indexToXY(currentIndex, MAP_W, pathEntity->position);
-					pathEntity->position = entities[pathEntity->id]->position;
-					//pathEntity->pathNodes->clear();
-				}
-			}
-			else {
-			// If path is no longer traversing
-				// Generate a path find event
-				//cout << "Putting pathEntity into it!" << endl;
-				pathFindNode.try_put(pathEntity);
-			}
-		}
-		}
-		std::chrono::duration<double> elapsed = clock.now() - start;
-		if (elapsed.count() < 1.0/5.0)
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000/5 - (size_t)(elapsed.count() * 1000.0)));
-		elapsed = clock.now() - start;
-		//cout << "AI traversed total time including sleep is: " << elapsed.count() * 1000.0 << endl;
-	}
-}
-
 int main(int argc, char** argv) {
 	using namespace std;
 	using namespace glm;
@@ -229,16 +198,11 @@ int main(int argc, char** argv) {
 	std::vector<PathEntity*> pathEntities;
 
 	glm::vec2 start(30,30), end(80,50);
-	for (size_t i = 0; i < 300; ++i) {
+	for (size_t i = 0; i < 580; ++i) {
 		glm::vec2 position = randomPosition(start, end);
 		pathEntities.push_back(new PathEntity(i, position));
 		entities.push_back(new Entity(i, position));
 	}
-
-	// Path generator node. This node will input ID_PATH and generate an path then output it.
-	PATH_FIND_NODE pathGenerator(g, 200, [=](PathEntity* pathEntity)->PathEntity* {
-		return pathEntity;
-	});
 
 	std::vector<size_t> map;
 
@@ -248,17 +212,23 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	// Path generator node. This node will input ID_PATH and generate an path then output it.
+	PATH_FIND_NODE pathGenerator(g, flow::unlimited, [&pathEntities](std::tuple<size_t, glm::vec2> pathRequest)->PathEntity* {
+		size_t id = std::get<0>(pathRequest);
+		pathEntities[id]->position = std::get<1>(pathRequest);
+		return pathEntities[id];
+	});
 
+	tbb::concurrent_queue<PathEntity*> solvedPathQueue;
 
 	// Path return node. This node will take input ID_PATH and return it to it's corresponding path entity.
-	PATH_FIND_NODE returnPathNode(g, 200, [&map](PathEntity* pathEntity)->PathEntity*{
+	PATH_SOLVE_NODE solvePathNode(g, 50, [&map, &solvedPathQueue](PathEntity* pathEntity)->PathEntity*{
 		wss::Path path(MAP_W, MAP_H, map);
 		micropather::MicroPather pather(&path);
-		//cout << "solving path for id: " << pathEntity->id << endl;
 		std::chrono::steady_clock clock;
+
 		auto start = clock.now();
 		size_t stateStart, stateEnd;
-		//cout << "path start: " << pathEntity->position.x << ", " << pathEntity->position.y << endl;
 		stateStart = wss::Utils::XYToIndex(pathEntity->position.x, pathEntity->position.y, MAP_W);
 		stateEnd = wss::Utils::XYToIndex(within(200), within(200), MAP_W );
 
@@ -267,36 +237,30 @@ int main(int argc, char** argv) {
 		wss::Utils::indexToXY(stateStart, MAP_W, startX, startY);
 		wss::Utils::indexToXY(stateEnd, MAP_W, endX, endY);
 
-		//cout << "startI: " << startX << ", " << startY << endl;
-		//cout << "endI: " << endX << ", " << endY << endl;
-
-
 		float cost;
 		pathEntity->pathNodes->clear();
 		pather.Solve((void*)stateStart, (void*)stateEnd, pathEntity->pathNodes, &cost);
 		pathEntity->traversing.store(true);
+		solvedPathQueue.push(pathEntity);
+		//cout << "solvedPathQueue pushed! " << pathEntity->id << endl;
 		std::chrono::duration<double> elapsed = clock.now() - start;
 		//cout << "Path solver elasped time: " << elapsed.count() * 1000.0 << endl;
-		return pathEntity;
-	});
 
-	std::thread traversePathThread([&pathGenerator, &pathEntities, &entities]() {
-		traversePath(pathGenerator, pathEntities, entities);
+		return pathEntity;
 	});
 
 	zmqpp::context context;
 	zmqpp::socket regionDataSocket(context, zmqpp::socket_type::publish);
 	regionDataSocket.bind("tcp://127.0.0.1:4200");
 
-	std::thread updateRegionThread([&regionDataSocket, &entities]() {
-		regionDataPublisher(regionDataSocket, entities);
+	std::thread updateRegionThread([&regionDataSocket, &pathGenerator, &solvedPathQueue, &entities]() {
+		regionDataPublisher(regionDataSocket, pathGenerator, solvedPathQueue, entities);
 	});
 
-	tbb::flow::make_edge(pathGenerator, returnPathNode);
+	tbb::flow::make_edge(pathGenerator, solvePathNode);
 
 	g.wait_for_all();
 
-	traversePathThread.join();
 	updateRegionThread.join();
 
 }

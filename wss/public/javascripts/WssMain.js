@@ -107,7 +107,7 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
                 //Hack: we want to pool sprites & entities so we pre-allocate them in someway before 
                 //we receive messages from server. Now just assume server ids are from 0 to 99 and just preallocate
                 //then now.
-                for (i = 0; i < 1000; ++i) {
+                for (i = 0; i < 600; ++i) {
                     var state = [0, 0, false];
                     regionData[i] = state;
                     addSprite(entityGroup, i, state, playerAnimation);
