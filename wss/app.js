@@ -70,7 +70,7 @@ io.on('connection', function(socket) {
        socket.emit('regionData', jsonData);
     });
     
-    requester.connect("tcp://localhost:4201");
+    //requester.connect("tcp://localhost:4201");
     
     requester.on('message', function(data) {
         // Received a reply.
@@ -90,15 +90,22 @@ io.on('connection', function(socket) {
     // Since both client and server is javascript we can just define 
     //compatible Objects.
     socket.on('AddEntityEvent', function(data) {
-        console.log("AddEntityEvent")
-        var addEntityRequest = {
-            "type": 1,
-            "data": {
-                
-            }
-        };
         
-        requester.send(JSON.stringify(addEntityRequest)); 
+        //var response = JSON.parse(data);
+        console.log("request add entity from client!");
+        socket.emit('EntityAddedEvent', {
+           id: 0 
+        });
+        
+        // console.log("AddEntityEvent")
+        // var addEntityRequest = {
+            // "type": 1,
+            // "data": {
+//                 
+            // }
+        // };
+//         
+        // requester.send(JSON.stringify(addEntityRequest)); 
     });
     
     socket.on('RemoveEntityEvent', function(data) {

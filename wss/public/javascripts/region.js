@@ -35,7 +35,8 @@ define(function() {
         if (position[2] == false)
             return;
         var sprite = $("#"+key);
-        //console.log("sprite: " + sprite);
+        
+        //console.log("sprite: " + key);
         //console.log("position: " + position);
         if ( position[2] == true)
         {

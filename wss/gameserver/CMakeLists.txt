@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(WssServer)
 
-#include_directories("/usr/include/i386-linux-gnu/c++/4.8/") 
+#include_directories("/home/beyzend/projects/tbb43_20141204oss/include") 
+#include_directories("/usr/include/i386-linux-gnu/c++/4.8/")
 
 #set( CMAKE_CXX_FLAGS "-std=c++11" )
 

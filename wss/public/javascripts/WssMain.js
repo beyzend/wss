@@ -102,12 +102,12 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
                 
                 // Initialize player to initial position (in world-space).
                 $.data["playerId"] = 11;//data.id;
-                addSprite(entityGroup, playerId, [0, 0], playerAnimation);
+                //addSprite(entityGroup, 11, [0, 0], playerAnimation);
                 
                 //Hack: we want to pool sprites & entities so we pre-allocate them in someway before 
                 //we receive messages from server. Now just assume server ids are from 0 to 99 and just preallocate
                 //then now.
-                for (i = 0; i < 80; ++i) {
+                for (i = 0; i < 1000; ++i) {
                     var state = [0, 0, false];
                     regionData[i] = state;
                     addSprite(entityGroup, i, state, playerAnimation);
@@ -118,7 +118,7 @@ require(["/javascripts/map.js", "/javascripts/region.js"], function(Map, Region)
                 
                 socket.on('regionData', function(data) {
                     var region = $.data["region"];
-       
+                 
                     $.each(data.positions, region.updateEntityPositions.bind(region));
                     region.render(getCameraPosition($.data["playerId"], region), region);
                     

@@ -9,6 +9,7 @@
 #include <cmath>
 #include <algorithm>
 
+#include <glm/glm.hpp>
 #include <glm/vec2.hpp>
 
 #include "wss/Path.h"
@@ -29,7 +30,7 @@ float Path::LeastCostEstimate(void* stateStart, void* stateEnd)
 
 	//assert
 
-	return (glm::vec2(startIndex % mapWidth, startIndex / mapWidth) - glm::vec2(endIndex % mapWidth, endIndex / mapWidth)).length();
+	return glm::length((glm::vec2(startIndex % mapWidth, startIndex / mapWidth) - glm::vec2(endIndex % mapWidth, endIndex / mapWidth)));
 
 }
 
@@ -59,7 +60,7 @@ void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent
 				continue;
 			micropather::StateCost stateCost;
 
-			float cost = (glm::vec2(x, y) - glm::vec2(cx, cy)).length();
+			float cost = glm::length((glm::vec2(x, y) - glm::vec2(cx, cy)));
 			stateCost.state = (void*)(wss::Utils::XYToIndex(cx, cy, mapWidth));
 			stateCost.cost = cost;
 			adjacent->push_back(stateCost);
