@@ -17,6 +17,7 @@ namespace wssmono
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;		
+		Viewport defaultViewport;
 
 		Map map;
 
@@ -25,6 +26,8 @@ namespace wssmono
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";	            
 			graphics.IsFullScreen = false;		
+			defaultViewport = GraphicsDevice.Viewport;
+		
         }
 
         /// <summary>
@@ -48,10 +51,12 @@ namespace wssmono
         {
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
-
 			System.Console.WriteLine ("Loading map from json file");
 			map = new Map ();
-			map.initialize ("Content/data/test.json");
+			//Content.Load<Texture2D> ();
+			map.Initialize (Content, "Content/data/test.json");
+
+			map.Draw (spriteBatch, defaultViewport, new Vector2 (50 * 18, 50 * 18), new Vector2 (0, 0));
 
             //TODO: use this.Content to load your game content here 
         }
@@ -68,6 +73,7 @@ namespace wssmono
 			{
 				Exit();
 			}
+			map.Update (gameTime);
             // TODO: Add your update logic here			
             base.Update(gameTime);
         }
@@ -81,7 +87,7 @@ namespace wssmono
            	graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
 		
             //TODO: Add your drawing code here
-            
+			//map.Draw (spriteBatch, Viewport);
             base.Draw(gameTime);
         }
     }
