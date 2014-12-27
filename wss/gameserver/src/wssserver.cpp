@@ -93,25 +93,28 @@ void serializeEntities(rapidjson::Document &root, size_t start, size_t end, tbb:
 	for(size_t i = start; i < end; ++i)
 	{
 		Entity* entity = entities[i];
-		rapidjson::Value entityValue;
-		entityValue.SetObject();
 
-		//std::cout << "serializing entity id: " << entity->id << std::endl;
-		rapidjson::Value entityId;
-		entityId.SetInt(entity->id);
+		if (entity->pathNodes) { // Only write out those with a path
 
-		rapidjson::Value xPosition;
-		rapidjson::Value yPosition;
-		xPosition.SetDouble(entity->position.x);
-		yPosition.SetDouble(entity->position.y);
+			rapidjson::Value entityValue;
+			entityValue.SetObject();
 
-		entityValue.AddMember("id", entityId, allocator);
-		entityValue.AddMember("x", xPosition, allocator);
-		entityValue.AddMember("y", yPosition, allocator);
+			//std::cout << "serializing entity id: " << entity->id << std::endl;
+			rapidjson::Value entityId;
+			entityId.SetInt(entity->id);
+
+			rapidjson::Value xPosition;
+			rapidjson::Value yPosition;
+			xPosition.SetDouble(entity->position.x);
+			yPosition.SetDouble(entity->position.y);
+
+			entityValue.AddMember("id", entityId, allocator);
+			entityValue.AddMember("x", xPosition, allocator);
+			entityValue.AddMember("y", yPosition, allocator);
 
 
-		positions.PushBack(entityValue, allocator);
-
+			positions.PushBack(entityValue, allocator);
+		}
 	}
 	root.AddMember("positions", positions, root.GetAllocator());
 
@@ -131,12 +134,14 @@ void regionDataPublisher(zmqpp::socket &publisher, PATH_FIND_NODE &pathFindNode,
 	while (1) {
 		auto start = clock.now();
 
+
 		// Grab a bunch fo path
 		{
 			//size_t size = entities.size();
 			for (size_t i = 0; i < 200; ++i) {
 				PathEntity* pathEntity;
 				if (solvedPathQueue.try_pop(pathEntity)) {
+
 					entities[pathEntity->id]->pathNodes = pathEntity->pathNodes;
 					entities[pathEntity->id]->currentNode = 0;
 				}
@@ -213,7 +218,7 @@ int main(int argc, char** argv) {
 	}
 
 	// Path generator node. This node will input ID_PATH and generate an path then output it.
-	PATH_FIND_NODE pathGenerator(g, flow::unlimited, [&pathEntities](std::tuple<size_t, glm::vec2> pathRequest)->PathEntity* {
+	PATH_FIND_NODE pathGenerator(g, 25, [&pathEntities](std::tuple<size_t, glm::vec2> pathRequest)->PathEntity* {
 		size_t id = std::get<0>(pathRequest);
 		pathEntities[id]->position = std::get<1>(pathRequest);
 		return pathEntities[id];
@@ -222,7 +227,7 @@ int main(int argc, char** argv) {
 	tbb::concurrent_queue<PathEntity*> solvedPathQueue;
 
 	// Path return node. This node will take input ID_PATH and return it to it's corresponding path entity.
-	PATH_SOLVE_NODE solvePathNode(g, 50, [&map, &solvedPathQueue](PathEntity* pathEntity)->PathEntity*{
+	PATH_SOLVE_NODE solvePathNode(g, 25, [&map, &solvedPathQueue](PathEntity* pathEntity)->PathEntity*{
 		wss::Path path(MAP_W, MAP_H, map);
 		micropather::MicroPather pather(&path);
 		std::chrono::steady_clock clock;

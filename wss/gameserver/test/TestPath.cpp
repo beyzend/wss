@@ -69,8 +69,10 @@ TEST_F(PathTest, TestLowCost) {
 
 	wss::Path* path0 = new wss::Path(10, 10, map);
 
+	// Test basic function
+
 	float cost = path0->LeastCostEstimate((void*)stateStart, (void*)stateEnd);
-	// dx = 0 - 1, dy = 0 - 1
+
 	float constantCost = 1.414214;
 
 	ASSERT_FLOAT_EQ(cost, constantCost);
@@ -92,9 +94,6 @@ TEST_F(PathTest, TestLowCost) {
 
 	cost = path0->LeastCostEstimate((void*)stateStart, (void*)stateEnd);
 	ASSERT_FLOAT_EQ(cost, glm::length(glm::vec2(4,5) - glm::vec2(5,5)));
-
-
-
 
 }
 
