@@ -90,7 +90,6 @@ namespace wssmono
 
 		public void Initialize (ContentManager content, string jsonFile) {
 			// Read the json file
-			JsonSerializer serializer = new JsonSerializer ();
 
 			using (System.IO.StreamReader stream = new System.IO.StreamReader(jsonFile))
 			//using (JsonTextReader textReader = new JsonTextReader(jsonFile)
@@ -111,8 +110,8 @@ namespace wssmono
 		public void Draw(SpriteBatch spriteBatch, Viewport viewport, Vector2 cameraWorld, Vector2 viewCenter, Vector2 worldViewTransform) {
 			Rectangle bounds = viewport.Bounds;
 
-			Int32 boundCols = bounds.Width / tiledMap.tilewidth;
-			Int32 boundRows = bounds.Height / tiledMap.tileheight;
+			Int32 boundCols = bounds.Width / tiledMap.tilewidth + 4;
+			Int32 boundRows = bounds.Height / tiledMap.tileheight + 4;
 
 			Vector2 cameraTilespace = cameraWorld; 
 			// Figure out page bounds in world space. Camera is assumed to be placed at center of a page region in world space.
@@ -130,9 +129,8 @@ namespace wssmono
 			Vector2 position = new Vector2 (0, 0);
 			Vector2 texturePosition = new Vector2 (0, 0);
 			Rectangle sourceRect = new Rectangle ();
-			Rectangle destRect = new Rectangle ();
-
-			spriteBatch.Begin (SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone);		// We now have page region of tiles in world space we can render them in camera space.
+		
+			spriteBatch.Begin (SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise);		// We now have page region of tiles in world space we can render them in camera space.
 			for (uint y = 0; y < tileRegionDimensions.Y; ++y) {
 				for (uint x = 0; x < tileRegionDimensions.X; ++x) {
 					position.X = (float)x;position.Y = (float)y;
@@ -142,22 +140,15 @@ namespace wssmono
 					texturePosition.X = tileId  % (mapAtlas.Width / tiledMap.tilewidth);
 					texturePosition.Y = tileId / (mapAtlas.Height / tiledMap.tilewidth);
 					sourceRect.Location = new Point ((int)Math.Floor(texturePosition.X * 18), (int)Math.Floor(texturePosition.Y * 18));
-					sourceRect.Width = tiledMap.tilewidth +1;
-					sourceRect.Height = tiledMap.tileheight +1;
-					//position *= (float)tiledMap.tilewidth;
-
+					sourceRect.Width = tiledMap.tilewidth;
+					sourceRect.Height = tiledMap.tileheight;
 					// x, y is in tile space world. 
-					position = position * 18.0f + worldViewTransform;//position * 18.0f - cameraWorld + viewCenter;
-					//System.Console.WriteLine ("CameraWorld: " + cameraWorld);
-					//System.Console.WriteLine ("position on screen!: " + position);
+					position = position * 18.0f + worldViewTransform;
 					spriteBatch.Draw (mapAtlas, position, sourceRect, Color.White); 	
 				}
 			}
-			Console.WriteLine ("cameraWorld: " + cameraWorld);
-			//Console.WriteLine ("worldTransform: " + worldViewTransform);
 			position = cameraWorld + worldViewTransform;
-			//Console.WriteLine (position);
-
+		
 			sourceRect.Location = new Point (1 * 18, 0);
 			sourceRect.Width = tiledMap.tilewidth;
 			sourceRect.Height = tiledMap.tileheight;

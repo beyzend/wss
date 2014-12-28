@@ -76,16 +76,16 @@ namespace wssmono
 
 			KeyboardState ks = Keyboard.GetState ();
 			if (ks.IsKeyDown (Keys.Left)) {
-				cameraWorld.X -= (float)(10.0d * gameTime.ElapsedGameTime.TotalSeconds);
+				cameraWorld.X -= (float)(100.0d * gameTime.ElapsedGameTime.TotalSeconds);
 			}
 			if (ks.IsKeyDown (Keys.Right)) {
-				cameraWorld.X += (float)(10.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
+				cameraWorld.X += (float)(100.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
 			}
 			if (ks.IsKeyDown (Keys.Up)) {
-				cameraWorld.Y -= (float)(10.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
+				cameraWorld.Y -= (float)(100.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
 			}
 			if (ks.IsKeyDown (Keys.Down)) {
-				cameraWorld.Y += (float)(10.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
+				cameraWorld.Y += (float)(100.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
 			}
 
 			map.Update (gameTime);
