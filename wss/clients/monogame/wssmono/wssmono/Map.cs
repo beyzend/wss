@@ -16,7 +16,7 @@ namespace wssmono
 {
 	public class Layer 
 	{
-		public List<Int16> data = null;
+		public List<Int32> data = null;
 		public Int32 height = 0;
 		public string name = "";
 		public Int32 opacity = 1;
@@ -108,32 +108,69 @@ namespace wssmono
 
 		}
 
-		public void Draw(SpriteBatch spriteBatch, Viewport viewport, Vector2 cameraWorld, Vector2 worldViewTransform) {
+		public void Draw(SpriteBatch spriteBatch, Viewport viewport, Vector2 cameraWorld, Vector2 viewCenter, Vector2 worldViewTransform) {
 			Rectangle bounds = viewport.Bounds;
 
 			Int32 boundCols = bounds.Width / tiledMap.tilewidth;
 			Int32 boundRows = bounds.Height / tiledMap.tileheight;
 
+			Vector2 cameraTilespace = cameraWorld; 
 			// Figure out page bounds in world space. Camera is assumed to be placed at center of a page region in world space.
-			Vector2 cameraTilespace = cameraWorld / tiledMap.tilewidth; // Map from world into tilespace. 
+			cameraTilespace = cameraWorld / tiledMap.tilewidth; // Map from world into tilespace. 
+
+			cameraTilespace.X = (float)Math.Floor (cameraTilespace.X);
+			cameraTilespace.Y = (float)Math.Floor (cameraTilespace.Y);
+
+
 			Rectangle tileMapBounds = new Rectangle (0, 0, tiledMap.width, tiledMap.height);
 			Vector2 tilePageOrigin = clipToTilespace (cameraTilespace - new Vector2 (boundCols / 2, boundRows / 2), tileMapBounds);
 			Vector2 tilePageEnd = clipToTilespace (cameraTilespace + new Vector2 (boundCols / 2, boundRows / 2), tileMapBounds);
 			Vector2 tileRegionDimensions = tilePageEnd - tilePageOrigin;
-			// We now have page region of tiles in world space we can render them in camera space.
+
+			Vector2 position = new Vector2 (0, 0);
+			Vector2 texturePosition = new Vector2 (0, 0);
+			Rectangle sourceRect = new Rectangle ();
+			Rectangle destRect = new Rectangle ();
+
+			spriteBatch.Begin (SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone);		// We now have page region of tiles in world space we can render them in camera space.
 			for (uint y = 0; y < tileRegionDimensions.Y; ++y) {
 				for (uint x = 0; x < tileRegionDimensions.X; ++x) {
-					Int32 tileId = getTileIdAt (tilePageOrigin + new Vector2(x, y));
-					System.Console.WriteLine ("Tile coord: " + x + ", " + y);
-					System.Console.WriteLine ("TileID: " + tileId);
+					position.X = (float)x;position.Y = (float)y;
+					position = tilePageOrigin + position;
+					Int32 tileId = getTileIdAt (position);
+					//Int32 tileId = 4;
+					texturePosition.X = tileId  % (mapAtlas.Width / tiledMap.tilewidth);
+					texturePosition.Y = tileId / (mapAtlas.Height / tiledMap.tilewidth);
+					sourceRect.Location = new Point ((int)Math.Floor(texturePosition.X * 18), (int)Math.Floor(texturePosition.Y * 18));
+					sourceRect.Width = tiledMap.tilewidth +1;
+					sourceRect.Height = tiledMap.tileheight +1;
+					//position *= (float)tiledMap.tilewidth;
+
+					// x, y is in tile space world. 
+					position = position * 18.0f + worldViewTransform;//position * 18.0f - cameraWorld + viewCenter;
+					//System.Console.WriteLine ("CameraWorld: " + cameraWorld);
+					//System.Console.WriteLine ("position on screen!: " + position);
+					spriteBatch.Draw (mapAtlas, position, sourceRect, Color.White); 	
 				}
 			}
+			Console.WriteLine ("cameraWorld: " + cameraWorld);
+			//Console.WriteLine ("worldTransform: " + worldViewTransform);
+			position = cameraWorld + worldViewTransform;
+			//Console.WriteLine (position);
+
+			sourceRect.Location = new Point (1 * 18, 0);
+			sourceRect.Width = tiledMap.tilewidth;
+			sourceRect.Height = tiledMap.tileheight;
+
+			spriteBatch.Draw (mapAtlas, position, sourceRect, Color.White);
+
+			spriteBatch.End ();
 
 		}
 
 		private Int32 getTileIdAt(Vector2 tileCoord) {
 			Int32 index = (int)tileCoord.Y * tiledMap.layers [0].width + (int)tileCoord.X;
-			return tiledMap.layers [0].data [index];
+			return tiledMap.layers [0].data [index] - 1; // Tiled map exported data starts at 1. 
 		}
 
 		private Vector2 clipToTilespace(Vector2 tile, Rectangle bounds) {

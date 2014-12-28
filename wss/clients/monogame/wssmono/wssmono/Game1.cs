@@ -21,6 +21,8 @@ namespace wssmono
 
 		Map map;
 
+		Vector2 cameraWorld = new Vector2 (50 * 18 + 12, 50 * 18 + 12);
+
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
@@ -56,8 +58,6 @@ namespace wssmono
 			//Content.Load<Texture2D> ();
 			map.Initialize (Content, "Content/data/test.json");
 
-			map.Draw (spriteBatch, defaultViewport, new Vector2 (50 * 18, 50 * 18), new Vector2 (0, 0));
-
             //TODO: use this.Content to load your game content here 
         }
 
@@ -73,6 +73,21 @@ namespace wssmono
 			{
 				Exit();
 			}
+
+			KeyboardState ks = Keyboard.GetState ();
+			if (ks.IsKeyDown (Keys.Left)) {
+				cameraWorld.X -= (float)(10.0d * gameTime.ElapsedGameTime.TotalSeconds);
+			}
+			if (ks.IsKeyDown (Keys.Right)) {
+				cameraWorld.X += (float)(10.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
+			}
+			if (ks.IsKeyDown (Keys.Up)) {
+				cameraWorld.Y -= (float)(10.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
+			}
+			if (ks.IsKeyDown (Keys.Down)) {
+				cameraWorld.Y += (float)(10.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
+			}
+
 			map.Update (gameTime);
             // TODO: Add your update logic here			
             base.Update(gameTime);
@@ -87,6 +102,15 @@ namespace wssmono
            	graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
 		
             //TODO: Add your drawing code here
+			//cameraWorld.X += 0.01f;
+			//Console.WriteLine (cameraWorld);
+			Vector2 viewCenter = new Vector2 (GraphicsDevice.Viewport.Width / 2.0f, GraphicsDevice.Viewport.Height / 2.0f);
+			Vector2 worldViewTransform = cameraWorld * -1.0f + viewCenter;
+
+
+			map.Draw (spriteBatch, GraphicsDevice.Viewport, cameraWorld, viewCenter, worldViewTransform);
+
+
 			//map.Draw (spriteBatch, Viewport);
             base.Draw(gameTime);
         }
