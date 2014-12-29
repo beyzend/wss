@@ -2,8 +2,28 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
   <MonoDevelop.Ide.Workbench ActiveDocument="wssmono/Game1.cs">
     <Files>
-      <File FileName="wssmono/Game1.cs" Line="39" Column="10" />
+      <File FileName="wssmono/Game1.cs" Line="87" Column="2" />
+      <File FileName="wssmono/Map.cs" Line="143" Column="25" />
     </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="wssmono" expanded="True">
+            <Node name="References" expanded="True" />
+            <Node name="Content" expanded="True">
+              <Node name="data" expanded="True" />
+              <Node name="graphics" expanded="True" />
+            </Node>
+            <Node name="Game1.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
+      <Pad Id="ClassPad">
+        <State expanded="True" selected="True">
+          <Node name="wssmono" expanded="True" />
+        </State>
+      </Pad>
+    </Pads>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />

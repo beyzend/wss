@@ -35,10 +35,16 @@ console.log("Connecting to region requester");
 var io = require('socket.io')(server);
 var total_temp = 0;
 var temps = 0;
+
+//io.set("log level", 3);
+
     
 io.on('connection', function(socket) {
+   
+   //socket.set("log level", 3);
+   
     socket.emit('news', {
-        hello : 'world'
+        hello : 'Hell World from node.js socket.io server'
     });
     socket.on('my other event', function(data) {
         console.log(data);

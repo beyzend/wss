@@ -53,7 +53,7 @@ namespace wssmono
 
 	}
 
-	class TiledMap
+	public class TiledMap
 	{
 		public Int32 height = 0;
 		public Int32 width = 0;
@@ -83,31 +83,36 @@ namespace wssmono
 	{
 		private Texture2D mapAtlas;
 		private TiledMap tiledMap;
+
 		public Map()
 		{
 
 		}
 
-		public void Initialize (ContentManager content, string jsonFile) {
-			// Read the json file
-
+		public static TiledMap LoadTiledMap(ContentManager content, out Texture2D atlas, string jsonFile)
+		{
+			TiledMap tiledMap = null;
 			using (System.IO.StreamReader stream = new System.IO.StreamReader(jsonFile))
-			//using (JsonTextReader textReader = new JsonTextReader(jsonFile)
 			{
 				tiledMap = JsonConvert.DeserializeObject<TiledMap> (stream.ReadToEnd ());
 				Tilesets tileset = tiledMap.tilesets [0];
-			
-				mapAtlas = content.Load<Texture2D> ("graphics/"+tileset.image);
+
+				atlas = content.Load<Texture2D> ("graphics/"+tileset.image);
 			}
 
-			System.Console.WriteLine ("TiledMap object is: " + tiledMap);
+			return tiledMap;
+		}
+
+		public void Initialize (TiledMap tiledMap, Texture2D atlas) {
+			this.tiledMap = tiledMap;
+			this.mapAtlas = atlas;
 		}
 
 		public void Update(GameTime gameTime) {
 
 		}
 
-		public void Draw(SpriteBatch spriteBatch, Viewport viewport, Vector2 cameraWorld, Vector2 viewCenter, Vector2 worldViewTransform) {
+		public void Draw(SpriteBatch spriteBatch, Viewport viewport, ref Vector2 cameraWorld, ref Vector2 viewCenter, ref Vector2 worldViewTransform) {
 			Rectangle bounds = viewport.Bounds;
 
 			Int32 boundCols = bounds.Width / tiledMap.tilewidth + 4;
@@ -130,7 +135,6 @@ namespace wssmono
 			Vector2 texturePosition = new Vector2 (0, 0);
 			Rectangle sourceRect = new Rectangle ();
 		
-			spriteBatch.Begin (SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise);		// We now have page region of tiles in world space we can render them in camera space.
 			for (uint y = 0; y < tileRegionDimensions.Y; ++y) {
 				for (uint x = 0; x < tileRegionDimensions.X; ++x) {
 					position.X = (float)x;position.Y = (float)y;
@@ -155,9 +159,16 @@ namespace wssmono
 
 			spriteBatch.Draw (mapAtlas, position, sourceRect, Color.White);
 
-			spriteBatch.End ();
-
 		}
+
+		public void getSprite(Int32 tileId, ref Vector2 texturePosition, ref Rectangle sourceRect) {
+			texturePosition.X = tileId  % (mapAtlas.Width / tiledMap.tilewidth);
+			texturePosition.Y = tileId / (mapAtlas.Height / tiledMap.tilewidth);
+			sourceRect.Location = new Point ((int)Math.Floor(texturePosition.X * 18), (int)Math.Floor(texturePosition.Y * 18));
+			sourceRect.Width = tiledMap.tilewidth;
+			sourceRect.Height = tiledMap.tileheight;
+		}
+
 
 		private Int32 getTileIdAt(Vector2 tileCoord) {
 			Int32 index = (int)tileCoord.Y * tiledMap.layers [0].width + (int)tileCoord.X;

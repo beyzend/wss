@@ -1,11 +1,15 @@
 #region Using Statements
 using System;
+using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Storage;
 using Microsoft.Xna.Framework.Input;
 
+
+using NetMQ;
+using NetMQ.Sockets;
 #endregion
 
 namespace wssmono
@@ -17,19 +21,22 @@ namespace wssmono
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;		
-		Viewport defaultViewport;
 
-		Map map;
+		Map map = null;
+		Texture2D mapAtlas = null;
 
 		Vector2 cameraWorld = new Vector2 (50 * 18 + 12, 50 * 18 + 12);
+
+		List<Vector2> entPositions = null;
+
+		NetClient client = null;
 
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";	            
-			graphics.IsFullScreen = false;		
-			defaultViewport = GraphicsDevice.Viewport;
-		
+			graphics.IsFullScreen = true;		
+
         }
 
         /// <summary>
@@ -54,12 +61,20 @@ namespace wssmono
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 			System.Console.WriteLine ("Loading map from json file");
+			TiledMap tiledMap = Map.LoadTiledMap (Content, out mapAtlas, "Content/data/test.json");
 			map = new Map ();
-			//Content.Load<Texture2D> ();
-			map.Initialize (Content, "Content/data/test.json");
+			map.Initialize (tiledMap, mapAtlas);
 
-            //TODO: use this.Content to load your game content here 
-        }
+			entPositions = new List<Vector2> ();
+			//Create a bunch of test entities. For now we just make sure we create at least as many entities as the amount of updates we get from server. 
+			for (int i = 0; i < 1000; ++i) {
+				entPositions.Add (new Vector2 (0, 0));
+			}
+
+			client = new NetClient ();
+			client.connectToServer ();
+
+		}
 
         /// <summary>
         /// Allows the game to run logic such as updating the world,
@@ -75,21 +90,28 @@ namespace wssmono
 			}
 
 			KeyboardState ks = Keyboard.GetState ();
-			if (ks.IsKeyDown (Keys.Left)) {
+			if (ks.IsKeyDown (Keys.Escape)) {
+				Exit();
+			}
+			if (ks.IsKeyDown (Keys.Left) || ks.IsKeyDown(Keys.A)) {
 				cameraWorld.X -= (float)(100.0d * gameTime.ElapsedGameTime.TotalSeconds);
 			}
-			if (ks.IsKeyDown (Keys.Right)) {
+			if (ks.IsKeyDown (Keys.Right) || ks.IsKeyDown(Keys.D)) {
 				cameraWorld.X += (float)(100.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
 			}
-			if (ks.IsKeyDown (Keys.Up)) {
+			if (ks.IsKeyDown (Keys.Up) || ks.IsKeyDown(Keys.W)) {
 				cameraWorld.Y -= (float)(100.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
 			}
-			if (ks.IsKeyDown (Keys.Down)) {
+			if (ks.IsKeyDown (Keys.Down) || ks.IsKeyDown(Keys.S)) {
 				cameraWorld.Y += (float)(100.0 * (float)gameTime.ElapsedGameTime.TotalSeconds);
 			}
 
 			map.Update (gameTime);
-            // TODO: Add your update logic here			
+            
+			//update entity positions
+			client.getEntityPositions (ref entPositions);
+
+			// TODO: Add your update logic here			
             base.Update(gameTime);
         }
 
@@ -99,7 +121,7 @@ namespace wssmono
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-           	graphics.GraphicsDevice.Clear(Color.CornflowerBlue);
+           	graphics.GraphicsDevice.Clear(Color.DeepPink);
 		
             //TODO: Add your drawing code here
 			//cameraWorld.X += 0.01f;
@@ -107,13 +129,30 @@ namespace wssmono
 			Vector2 viewCenter = new Vector2 (GraphicsDevice.Viewport.Width / 2.0f, GraphicsDevice.Viewport.Height / 2.0f);
 			Vector2 worldViewTransform = cameraWorld * -1.0f + viewCenter;
 
+			Rectangle spriteSource = new Rectangle ();
+			Int32 tileId = 1;
+			Vector2 texturePosition = new Vector2 (0, 0);
 
-			map.Draw (spriteBatch, GraphicsDevice.Viewport, cameraWorld, viewCenter, worldViewTransform);
+			spriteBatch.Begin (SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullCounterClockwise);		// We now have page region of tiles in world space we can render them in camera space.
+
+			map.Draw (spriteBatch, GraphicsDevice.Viewport, ref cameraWorld, ref viewCenter, ref worldViewTransform);
+
+			// Draw entitity sprites.
+			foreach (Vector2 position in entPositions) {
+				Vector2 vec = position*18;
+				map.getSprite (tileId, ref texturePosition, ref spriteSource);
+				vec += worldViewTransform;
+				spriteBatch.Draw (mapAtlas, vec, spriteSource, Color.White);
+			}
+
+			spriteBatch.End ();
 
 
 			//map.Draw (spriteBatch, Viewport);
             base.Draw(gameTime);
         }
+
+
     }
 }
 

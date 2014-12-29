@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
 	std::vector<PathEntity*> pathEntities;
 
 	glm::vec2 start(30,30), end(80,50);
-	for (size_t i = 0; i < 580; ++i) {
+	for (size_t i = 0; i < 1000; ++i) {
 		glm::vec2 position = randomPosition(start, end);
 		pathEntities.push_back(new PathEntity(i, position));
 		entities.push_back(new Entity(i, position));
