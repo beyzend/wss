@@ -1,6 +1,25 @@
 #pragma once
 
+#include "wss.gch"
+
 namespace wss {
+
+class Score {
+
+public:
+	static float Attenuate(size_t value) {
+		if (value != 0)
+			return 10.0/value;
+		return 10.0;
+	}
+
+	/**
+	 * This function will compute a utility score based on current and future value delta.
+	 */
+	static float ComputeScore(size_t currentValue, size_t futureValue) {
+		return Attenuate(currentValue) - Attenuate(futureValue);
+	}
+};
 
 class Utils {
 public:

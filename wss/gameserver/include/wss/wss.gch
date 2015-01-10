@@ -1,5 +1,7 @@
 #pragma once
 
+#include "glm/glm.hpp"
+#include "glm/vec2.hpp"
 #include "wss/Attributes.h"
 #include "wss/AttributeEntity.h"
 #include "wss/Advertisement.h"

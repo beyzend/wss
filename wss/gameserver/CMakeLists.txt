@@ -29,6 +29,6 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/dist/media)
 enable_testing()
 add_test(NAME TestPath COMMAND TestPath)
 add_test(NAME TestAttributes COMMAND TestAttributes) 
-
+add_test(NAME TestScoreUtils COMMAND TestScoreUtils)
 
  

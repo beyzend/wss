@@ -39,8 +39,8 @@ TEST_F(AttributeTest, TestScore) {
 
 	AttributeEntity oneEntity;
 
-	float cost = oneEntity.score(advertOne);
-	ASSERT_FLOAT_EQ(cost, 1.0f);
+	float score = oneEntity.score(advertOne);
+	ASSERT_FLOAT_EQ(score, 1.0f);
 
 }
 
