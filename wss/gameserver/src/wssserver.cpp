@@ -134,7 +134,6 @@ void regionDataPublisher(zmqpp::socket &publisher, PATH_FIND_NODE &pathFindNode,
 	while (1) {
 		auto start = clock.now();
 
-
 		// Grab a bunch fo path
 		{
 			//size_t size = entities.size();

@@ -1,0 +1,6 @@
+#pragma once
+
+#include "wss/Attributes.h"
+#include "wss/AttributeEntity.h"
+#include "wss/Advertisement.h"
+
