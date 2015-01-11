@@ -1,8 +1,11 @@
+#include <algorithm>
+
 #include "wss/AttributeEntity.h"
 #include "wss/Utils.h"
+
 using namespace wss;
 
-AttributeEntity::AttributeEntity(const std::vector<AttributeValue> &attributes) : _attributes(attributes) {
+AttributeEntity::AttributeEntity(const std::vector<ATTRIBUTE_VALUE> &attributes) : _attributes(attributes) {
 
 }
 
@@ -25,8 +28,26 @@ float AttributeEntity::score(const Advertisement &advert) {
 			}
 		}
 	}
-
-
 	return returnScore;
+}
+
+/***
+ * This method will pick an advertisment based on passed in ADVERT_SCORE tuple.
+ * This method will alter the passed in vector.
+ *
+ * \return ADVERT_SCORE tuple containing advert and associated score.
+ */
+int AttributeEntity::pickAdvertisement(std::vector<ADVERT_SCORE> &scores) {
+
+		if (scores.size() < 1)
+		return -1;
+
+	// For now use the top one.
+	std::sort(scores.begin(), scores.end(), [](ADVERT_SCORE score1, ADVERT_SCORE score2){
+		return std::get<1>(score1) < std::get<1>(score2);
+	});
+
+	// Just return the first one.
+	return 0;
 }
 

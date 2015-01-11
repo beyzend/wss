@@ -10,13 +10,14 @@ namespace wss
 class AttributeEntity
 {
 public:
-	AttributeEntity(const std::vector<AttributeValue> &attributes);
+	AttributeEntity(const std::vector<ATTRIBUTE_VALUE> &attributes);
 	virtual ~AttributeEntity();
 
 	float score(const Advertisement &advert);
+	int pickAdvertisement(std::vector<ADVERT_SCORE> &scores);
 
 protected:
 private:
-	std::vector<AttributeValue> _attributes;
+	std::vector<ATTRIBUTE_VALUE> _attributes;
 };
 }
