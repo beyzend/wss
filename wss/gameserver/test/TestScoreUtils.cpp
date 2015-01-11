@@ -31,7 +31,7 @@ TEST_F(ScoreUtilsTest, TestScores) {
 	size_t valueTwo = 0;
 	size_t valueThree = 100;
 
-	float constOne = 10.0 / size_t(-1);
+	float constOne = 10.0 / -1;
 	float constTwo = 10.0; // 10.0 / 0.0 is defined to return 10.0
 	float constThree = 10.0 / 100;
 

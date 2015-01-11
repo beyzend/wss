@@ -7,7 +7,7 @@ namespace wss {
 class Score {
 
 public:
-	static float Attenuate(size_t value) {
+	static float Attenuate(std::int32_t value) {
 		if (value != 0)
 			return 10.0/value;
 		return 10.0;
@@ -16,7 +16,7 @@ public:
 	/**
 	 * This function will compute a utility score based on current and future value delta.
 	 */
-	static float ComputeScore(size_t currentValue, size_t futureValue) {
+	static float ComputeScore(std::int32_t currentValue, std::int32_t futureValue) {
 		return Attenuate(currentValue) - Attenuate(futureValue);
 	}
 };

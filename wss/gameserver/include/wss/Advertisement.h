@@ -9,9 +9,6 @@
 
 namespace wss
 {
-
-typedef std::tuple<wss::Attributes, size_t> AttributeValue;
-
 class Advertisement
 {
 public:
@@ -22,7 +19,9 @@ public:
 
 	}
 
-	const std::vector<AttributeValue>& getDeltas() {
+	/// For now assume that Attributes of attribute entities are normalized in the range of 0...100.
+	/// TODO: figure out how to map advertisement costs to arbitrary distribution of values (may need to normalize cost for advertisement).
+	const std::vector<AttributeValue>& getDeltas() const {
 		return _advertDeltas;
 	}
 

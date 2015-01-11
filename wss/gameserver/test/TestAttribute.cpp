@@ -34,13 +34,22 @@ protected:
 TEST_F(AttributeTest, TestScore) {
 	// Not using a mock object for now.
 	using namespace wss;
-	std::vector<AttributeValue> attributesOne = {std::make_tuple(Attributes::Health, 100), std::make_tuple(Attributes::Attack, 10)};
-	Advertisement advertOne(attributesOne);
 
-	AttributeEntity oneEntity;
+	// Test those that match none match one, match multiple, matches all
+	std::vector<AttributeValue> attributesMatchNone = {std::make_tuple(Attributes::Hunger, 2)};
+	std::vector<AttributeValue> attributesOne = {std::make_tuple(Attributes::Health, 5)};
+	std::vector<AttributeValue> attributesMulti = {std::make_tuple(Attributes::Health, 20), std::make_tuple(Attributes::Attack, 50)};
+	std::vector<AttributeValue> attributesAll = {std::make_tuple(Attributes::Health, 50), std::make_tuple(Attributes::Attack, 20), std::make_tuple(Attributes::Defense, 40), std::make_tuple(Attributes::Power, 5)};
 
+	std::vector<AttributeValue> oneEntityAttributes = {std::make_tuple(Attributes::Health, 80), std::make_tuple(Attributes::Attack, 50), std::make_tuple(Attributes::Defense, 5), std::make_tuple(Attributes::Power, 66)};
+
+	AttributeEntity oneEntity(oneEntityAttributes);
+
+	Advertisement advertOne(attributesMatchNone);
+
+	float constScore = 0.0f;
 	float score = oneEntity.score(advertOne);
-	ASSERT_FLOAT_EQ(score, 1.0f);
+	ASSERT_FLOAT_EQ(score, constScore);
 
 }
 
