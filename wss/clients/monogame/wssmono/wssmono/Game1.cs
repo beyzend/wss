@@ -35,7 +35,7 @@ namespace wssmono
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";	            
-			graphics.IsFullScreen = true;		
+			graphics.IsFullScreen = false;		
 
         }
 

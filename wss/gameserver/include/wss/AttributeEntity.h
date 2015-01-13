@@ -13,11 +13,13 @@ using ADVERT_SCORE = std::tuple<const Advertisement*, float>;
 class AttributeEntity
 {
 public:
-	AttributeEntity(const std::vector<ATTRIBUTE_VALUE> &attributes);
+	AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &attributes);
 	virtual ~AttributeEntity();
 
 	float score(const Advertisement &advert);
 	int pickAdvertisement(std::vector<ADVERT_SCORE> &scores);
+
+	size_t id;
 
 protected:
 private:

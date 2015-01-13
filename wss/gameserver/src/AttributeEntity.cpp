@@ -8,7 +8,7 @@
 
 using namespace wss;
 
-AttributeEntity::AttributeEntity(const std::vector<ATTRIBUTE_VALUE> &attributes) : _attributes(attributes) {
+AttributeEntity::AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &attributes) : _attributes(attributes), id(id) {
 
 }
 

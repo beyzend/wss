@@ -65,7 +65,7 @@ private:
 class Advertisement
 {
 public:
-	Advertisement(const std::vector<ATTRIBUTE_VALUE> &deltas, const std::vector<AdvertCommand> commands) : _advertDeltas(deltas) {
+	Advertisement(const std::vector<ATTRIBUTE_VALUE> &deltas, const std::vector<AdvertCommand> commands) : _advertDeltas(deltas), _commands(commands) {
 
 	}
 	~Advertisement() {
@@ -77,8 +77,11 @@ public:
 		return _advertDeltas;
 	}
 
+	std::vector<AdvertCommand> getCommands() const { return _commands; }
+
 private:
 	std::vector<ATTRIBUTE_VALUE> _advertDeltas;
+	std::vector<AdvertCommand> _commands;
 };
 }
 

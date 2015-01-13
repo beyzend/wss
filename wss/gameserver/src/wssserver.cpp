@@ -79,6 +79,7 @@ struct PathEntity {
 
 };
 
+using TRAVERSE_DONE_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2>>;
 using PATH_FIND_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2>, PathEntity*>;
 using PATH_SOLVE_NODE = tbb::flow::function_node<PathEntity*, PathEntity*>;
 
@@ -131,14 +132,14 @@ void serializeEntities(rapidjson::Document &root, size_t start, size_t end, tbb:
 }
 
 
-void regionDataPublisher(zmqpp::socket &publisher, PATH_FIND_NODE &pathFindNode, tbb::concurrent_queue<PathEntity*> &solvedPathQueue, tbb::concurrent_vector<Entity*> entities) {
+void regionDataPublisher(zmqpp::socket &publisher, TRAVERSE_DONE_NODE &pathFindNode, tbb::concurrent_queue<PathEntity*> &solvedPathQueue, tbb::concurrent_vector<Entity*> entities) {
 	using namespace std;
 
 	std::chrono::steady_clock clock;
 
 	// Initialize path.
 	for (auto entity : entities) {
-		pathFindNode.try_put(std::tuple<size_t, glm::vec2>(entity->id, entity->position));
+		pathFindNode.try_put(make_pair(entity->id, entity->position));//(std::tuple<size_t, glm::vec2>(entity->id, entity->position));
 	}
 
 	while (1) {
@@ -221,8 +222,8 @@ int main(int argc, char** argv) {
 		pathEntities.push_back(new PathEntity(i, position));
 		entities.push_back(new Entity(i, position));
 		// create attribute entities with health and happiness
-
-
+		vector<ATTRIBUTE_VALUE> attributes = {std::make_pair(Attributes::Health, 100), std::make_pair(Attributes::Happiness, 50)};
+		attributeEntities.push_back(shared_ptr<AttributeEntity>(new AttributeEntity(i, attributes)));
 	}
 
 	std::vector<size_t> map;
@@ -273,18 +274,15 @@ int main(int argc, char** argv) {
 
 				wss::AdvertCommand command("testcommand", behaviors, data);
 
-				std::vector<wss::ATTRIBUTE_VALUE> deltas = {std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness, within(10))};
+				std::vector<wss::ATTRIBUTE_VALUE> deltas = {std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness, within(15)),
+					std::make_pair(wss::Attributes::Health, - 5 - within(5))};
 				std::shared_ptr<Advertisement> advert(new Advertisement(deltas, std::vector<AdvertCommand>({command})));
 
 				advertPos[i] = std::make_pair(advert, std::get<1>(advertPos[i]));
 			}
-
 			advertZones[zoneIndex] = advertPos;
-
 		}
 	}
-
-
 
 
 	// Path generator node. This node will input ID_PATH and generate an path then output it.
@@ -293,6 +291,38 @@ int main(int argc, char** argv) {
 		pathEntities[id]->position = std::get<1>(pathRequest);
 		return pathEntities[id];
 	});
+
+	// Traverse done node. This node will take input and process an entity for the TRAVERSE_DONE_STATE--it will find nearest advertisement.
+	TRAVERSE_DONE_NODE traverseDone(g, 25, [&](std::tuple<size_t, glm::vec2> traverseDoneEvent)->void {
+		size_t id = get<0>(traverseDoneEvent);
+		auto attributeEntity = attributeEntities[id];
+		vec2 position = get<1>(traverseDoneEvent);
+		size_t zoneId = Utils::XYToIndex(position.x / ZONE_SIZE, position.y / ZONE_SIZE, NUM_OF_ZONES);
+		auto adverts = advertZones[zoneId];
+
+		vector<ADVERT_SCORE> scores;
+		for (auto advert_pos : adverts) {
+			auto advert = get<0>(advert_pos);
+			auto position = get<1>(advert_pos);
+			scores.push_back(make_pair(advert.get(), attributeEntity->score(*advert)));
+		}
+		int whichOne = attributeEntity->pickAdvertisement(scores);
+		if (whichOne > -1) {
+			auto pickedAdvert = get<0>(scores[whichOne]);
+			// Get behaviors
+			vector<AdvertCommand> commands = pickedAdvert->getCommands();
+			// For now just generate path.
+			pathGenerator.try_put(make_pair(id, position));
+		}
+		else {
+			cout << "NO SCORE GIRL!" << endl;
+		}
+
+		return;
+	});
+
+
+
 
 	tbb::concurrent_queue<PathEntity*> solvedPathQueue;
 
@@ -328,8 +358,8 @@ int main(int argc, char** argv) {
 	zmqpp::socket regionDataSocket(context, zmqpp::socket_type::publish);
 	regionDataSocket.bind("tcp://127.0.0.1:4200");
 
-	std::thread updateRegionThread([&regionDataSocket, &pathGenerator, &solvedPathQueue, &entities]() {
-		regionDataPublisher(regionDataSocket, pathGenerator, solvedPathQueue, entities);
+	std::thread updateRegionThread([&]() {
+		regionDataPublisher(regionDataSocket, traverseDone, solvedPathQueue, entities);
 	});
 
 	tbb::flow::make_edge(pathGenerator, solvePathNode);

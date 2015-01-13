@@ -45,7 +45,7 @@ protected:
 TEST_F(AttributeTest, TestScore) {
 	// Not using a mock object for now.
 
-	AttributeEntity oneEntity(oneEntityAttributes);
+	AttributeEntity oneEntity(0, oneEntityAttributes);
 
 	using AttrVector = std::vector<std::vector<ATTRIBUTE_VALUE>>;
 	using ScoreVector = std::vector<float>;
@@ -79,7 +79,7 @@ TEST_F(AttributeTest, TestScore) {
 TEST_F(AttributeTest, TestPickAdvert) {
 
 
-	AttributeEntity oneEntity(oneEntityAttributes);
+	AttributeEntity oneEntity(0, oneEntityAttributes);
 
 	std::vector<ATTRIBUTE_VALUE> anotherOne = {std::make_tuple(Attributes::Health, 20)};
 
