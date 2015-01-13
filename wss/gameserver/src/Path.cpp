@@ -4,7 +4,6 @@
  *  Created on: Dec 16, 2014
  *      Author: beyzend
  */
-
 #include <iostream>
 #include <cmath>
 #include <algorithm>

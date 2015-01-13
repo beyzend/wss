@@ -1,6 +1,9 @@
+#include "wss/wss.h"
+
 #include <algorithm>
 
 #include "wss/AttributeEntity.h"
+#include "wss/Advertisement.h"
 #include "wss/Utils.h"
 
 using namespace wss;

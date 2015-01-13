@@ -1,11 +1,14 @@
 #pragma once
 
-#include "wss/wss.gch"
-
-#include "wss/Advertisement.h"
+#include "wss/Attributes.h"
 
 namespace wss
 {
+
+class Advertisement;
+
+using ADVERT_SCORE = std::tuple<const Advertisement*, float>;
+
 
 class AttributeEntity
 {

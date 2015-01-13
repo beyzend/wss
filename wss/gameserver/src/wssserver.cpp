@@ -5,7 +5,7 @@
  *      Author: beyzend
  */
 
-#include "wss/wss.gch"
+#include "wss/wss.h"
 
 #include <iostream>
 #include <chrono>
@@ -32,7 +32,9 @@
 
 #include "wss/Utils.h"
 #include "wss/Path.h"
-
+#include "wss/Attributes.h"
+#include "wss/AttributeEntity.h"
+#include "wss/Advertisement.h"
 
 #define within(num) (int) ((float) num * random () / (RAND_MAX + 1.0))
 
@@ -197,6 +199,7 @@ int main(int argc, char** argv) {
 	using namespace std;
 	using namespace glm;
 	using namespace tbb;
+	using namespace wss;
 
 	using PATH_VEC = vector<void*>;
 	cout << "Starting Intel TBB and ZMQ server!" << endl;
@@ -210,12 +213,16 @@ int main(int argc, char** argv) {
 	// Use a memory allocator here.
 	tbb::concurrent_vector<Entity*> entities;
 	std::vector<PathEntity*> pathEntities;
+	std::vector<std::shared_ptr<AttributeEntity>> attributeEntities;
 
 	glm::vec2 start(30,30), end(80,50);
 	for (size_t i = 0; i < 1000; ++i) {
 		glm::vec2 position = randomPosition(start, end);
 		pathEntities.push_back(new PathEntity(i, position));
 		entities.push_back(new Entity(i, position));
+		// create attribute entities with health and happiness
+
+
 	}
 
 	std::vector<size_t> map;
@@ -235,22 +242,48 @@ int main(int argc, char** argv) {
 	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
 		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
 			glm::vec2 center(x * 18.0 + ZONE_SIZE / 2, y * 18.0 + ZONE_SIZE / 2);
+			std::vector<ADVERT_POS> advertPos;
 			for (size_t i = 0; i < advertsPerZone; ++i) {
 				glm::vec2 randCircle = glm::diskRand((float)ZONE_SIZE);
 				glm::vec2 advertPosition = center + randCircle;
 				cout << "Zone x,y: " << x << "," << y << endl;
 				cout << "advertPosition: " << advertPosition.x << ", " << advertPosition.y << endl;
-				size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
 
-				std::vector<wss::ATTRIBUTE_VALUE> deltas = {std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness, within(10))};
-				//std::vector<wss::AdvertCommand> commands;
-				//std::auto_ptr advert(new Advertisement());
-
-				//advertZones.insert(std::make_tuple(advert, advertPosition));
-
+				advertPos.push_back(std::make_tuple(nullptr, advertPosition));
 			}
+			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
+			advertZones[zoneIndex] = advertPos;
 		}
 	}
+
+	// Move randomly to another advert.
+	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
+		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
+			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
+			auto advertPos = advertZones[zoneIndex];
+			for (size_t i = 0; i < advertsPerZone; ++i) {
+				//Make commands
+				std::queue<AdvertBehaviorTest> behaviors;
+				behaviors.push(AdvertBehaviorTest::MOVE_TO);
+				behaviors.push(AdvertBehaviorTest::WAIT);
+
+				std::queue<glm::vec2> data;
+				data.push(glm::vec2(glm::linearRand(0.0f, NUM_OF_ZONES * 18.0f), glm::linearRand(0.0f, NUM_OF_ZONES * 18.0f)));
+				data.push(glm::vec2(glm::linearRand(1.0f, 6.0f), 0.0f));
+
+				wss::AdvertCommand command("testcommand", behaviors, data);
+
+				std::vector<wss::ATTRIBUTE_VALUE> deltas = {std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness, within(10))};
+				std::shared_ptr<Advertisement> advert(new Advertisement(deltas, std::vector<AdvertCommand>({command})));
+
+				advertPos[i] = std::make_pair(advert, std::get<1>(advertPos[i]));
+			}
+
+			advertZones[zoneIndex] = advertPos;
+
+		}
+	}
+
 
 
 

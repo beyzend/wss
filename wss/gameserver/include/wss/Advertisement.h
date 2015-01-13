@@ -2,11 +2,12 @@
 
 //check winddows
 //#include "wss/wss.gch"
-#include "wss.gch"
+#include "wss/wss.h"
 #include <iostream>
 #include <vector>
 #include <queue>
 #include <string>
+
 
 namespace wss
 {
@@ -17,8 +18,6 @@ enum class AdvertBehaviorTest
 	MOVE_TO,
 	WAIT
 };
-
-
 
 /// Temporary test implementation for Advertisement Command: a class for deferred command with associated behavior tree.
 /// Note this is just test. Future version will contain real behavior tree. Each behavior can have a duck-typed data array associated.
@@ -81,8 +80,5 @@ public:
 private:
 	std::vector<ATTRIBUTE_VALUE> _advertDeltas;
 };
-
-using ADVERT_SCORE = std::tuple<const Advertisement*, float>;
-
 }
 

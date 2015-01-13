@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wss.gch"
+#include "wss/wss.h"
 
 namespace wss {
 
