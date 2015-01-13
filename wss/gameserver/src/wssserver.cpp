@@ -5,10 +5,13 @@
  *      Author: beyzend
  */
 
+#include "wss/wss.gch"
+
 #include <iostream>
 #include <chrono>
 #include <thread>
 #include <tuple>
+#include <unordered_map>
 
 #include <zmqpp/zmqpp.hpp>
 
@@ -16,6 +19,7 @@
 #include <tbb/concurrent_vector.h>
 #include <tbb/concurrent_queue.h>
 #include <glm/vec2.hpp>
+#include <glm/gtc/random.hpp>
 
 #include <thread>
 #include <mutex>
@@ -29,12 +33,16 @@
 #include "wss/Utils.h"
 #include "wss/Path.h"
 
+
 #define within(num) (int) ((float) num * random () / (RAND_MAX + 1.0))
 
 #define GLM_FORCE_SSSE3
 
 const size_t MAP_W = 200;
 const size_t MAP_H = 200;
+
+size_t ZONE_SIZE = 20;
+size_t NUM_OF_ZONES = MAP_W / ZONE_SIZE;
 
 struct Entity {
 
@@ -197,6 +205,8 @@ int main(int argc, char** argv) {
 	size_t i;
 	tbb::flow::graph g;
 
+	// SETUP ENTITIES
+
 	// Use a memory allocator here.
 	tbb::concurrent_vector<Entity*> entities;
 	std::vector<PathEntity*> pathEntities;
@@ -215,6 +225,34 @@ int main(int argc, char** argv) {
 			map.push_back(1);
 		}
 	}
+
+	using ADVERT_POS = std::tuple<std::shared_ptr<wss::Advertisement>, glm::vec2>;
+	using vSECTOR_ADVERTS = std::vector<ADVERT_POS>;
+	std::unordered_map<size_t, vSECTOR_ADVERTS> advertZones;
+
+	size_t advertsPerZone = 5;
+	// Setup ADVERTISEMENTS: randomly create random advertisement within each zone.
+	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
+		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
+			glm::vec2 center(x * 18.0 + ZONE_SIZE / 2, y * 18.0 + ZONE_SIZE / 2);
+			for (size_t i = 0; i < advertsPerZone; ++i) {
+				glm::vec2 randCircle = glm::diskRand((float)ZONE_SIZE);
+				glm::vec2 advertPosition = center + randCircle;
+				cout << "Zone x,y: " << x << "," << y << endl;
+				cout << "advertPosition: " << advertPosition.x << ", " << advertPosition.y << endl;
+				size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
+
+				std::vector<wss::ATTRIBUTE_VALUE> deltas = {std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness, within(10))};
+				//std::vector<wss::AdvertCommand> commands;
+				//std::auto_ptr advert(new Advertisement());
+
+				//advertZones.insert(std::make_tuple(advert, advertPosition));
+
+			}
+		}
+	}
+
+
 
 	// Path generator node. This node will input ID_PATH and generate an path then output it.
 	PATH_FIND_NODE pathGenerator(g, 25, [&pathEntities](std::tuple<size_t, glm::vec2> pathRequest)->PathEntity* {

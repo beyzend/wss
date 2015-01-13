@@ -2,6 +2,7 @@
 #include <memory>
 #include <algorithm>
 #include <tuple>
+#include <queue>
 
 #include <iostream>
 
@@ -37,6 +38,8 @@ protected:
 	std::vector<ATTRIBUTE_VALUE> attributesMulti = {std::make_tuple(Attributes::Health, 20), std::make_tuple(Attributes::Power, 30)};
 	std::vector<ATTRIBUTE_VALUE> oneEntityAttributes = {std::make_tuple(Attributes::Health, 80), std::make_tuple(Attributes::Attack, 50), std::make_tuple(Attributes::Defense, 5), std::make_tuple(Attributes::Power, 66)};
 
+	wss::AdvertCommand command = wss::AdvertCommand("test", std::queue<AdvertBehaviorTest>({AdvertBehaviorTest::NONE}), std::queue<glm::vec2>({glm::vec2()}));
+	std::vector<AdvertCommand> commands = {wss::AdvertCommand(command)};
 };
 
 TEST_F(AttributeTest, TestScore) {
@@ -60,7 +63,8 @@ TEST_F(AttributeTest, TestScore) {
 			auto attr = attrs[i];
 			float constScore = scores[i];
 
-			Advertisement advert(attr);
+
+			Advertisement advert(attr, commands);
 			float score = oneEntity.score(advert);
 
 			ASSERT_FLOAT_EQ(constScore, score);
@@ -79,8 +83,8 @@ TEST_F(AttributeTest, TestPickAdvert) {
 
 	std::vector<ATTRIBUTE_VALUE> anotherOne = {std::make_tuple(Attributes::Health, 20)};
 
-	Advertisement advertOne(attributesOne);
-	Advertisement betterOne(anotherOne);
+	Advertisement advertOne(attributesOne, commands);
+	Advertisement betterOne(anotherOne, commands);
 
 	float scoreOne = oneEntity.score(advertOne);
 	float betterScore = oneEntity.score(betterOne);
