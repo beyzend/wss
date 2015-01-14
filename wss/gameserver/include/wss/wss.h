@@ -2,6 +2,8 @@
 
 //#include <vector>
 
+#include <memory>
+
 #include "glm/glm.hpp"
 #include "glm/vec2.hpp"
 //#include "wss/Attributes.h"

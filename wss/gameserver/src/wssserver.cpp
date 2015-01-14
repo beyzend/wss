@@ -35,6 +35,7 @@
 #include "wss/Attributes.h"
 #include "wss/AttributeEntity.h"
 #include "wss/Advertisement.h"
+#include "wss/AdvertCommand.h"
 
 #define within(num) (int) ((float) num * random () / (RAND_MAX + 1.0))
 
@@ -63,6 +64,7 @@ struct PathEntity {
 	tbb::atomic<bool> traversing;
 	std::vector<void*>* pathNodes;
 	glm::vec2 position;
+	glm::vec2 moveTo;
 
 	PathEntity(size_t id, glm::vec2 position) : id(id), traversing(false), pathNodes(new std::vector<void*>()),
 			position(position)
@@ -79,8 +81,8 @@ struct PathEntity {
 
 };
 
-using TRAVERSE_DONE_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2>>;
-using PATH_FIND_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2>, PathEntity*>;
+using PROCESS_ATTRIBUTE_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2>>;
+using PATH_FIND_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2, glm::vec2>, PathEntity*>;
 using PATH_SOLVE_NODE = tbb::flow::function_node<PathEntity*, PathEntity*>;
 
 
@@ -132,7 +134,7 @@ void serializeEntities(rapidjson::Document &root, size_t start, size_t end, tbb:
 }
 
 
-void regionDataPublisher(zmqpp::socket &publisher, TRAVERSE_DONE_NODE &pathFindNode, tbb::concurrent_queue<PathEntity*> &solvedPathQueue, tbb::concurrent_vector<Entity*> entities) {
+void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathFindNode, tbb::concurrent_queue<PathEntity*> &solvedPathQueue, tbb::concurrent_vector<Entity*> entities) {
 	using namespace std;
 
 	std::chrono::steady_clock clock;
@@ -196,6 +198,13 @@ void regionDataPublisher(zmqpp::socket &publisher, TRAVERSE_DONE_NODE &pathFindN
 	}
 }
 
+PROCESS_ATTRIBUTE_NODE* processNext = nullptr;
+
+PROCESS_ATTRIBUTE_NODE* getProcessNext() {
+	return processNext;
+}
+
+
 int main(int argc, char** argv) {
 	using namespace std;
 	using namespace glm;
@@ -242,84 +251,173 @@ int main(int argc, char** argv) {
 	// Setup ADVERTISEMENTS: randomly create random advertisement within each zone.
 	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
 		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
-			glm::vec2 center(x * 18.0 + ZONE_SIZE / 2, y * 18.0 + ZONE_SIZE / 2);
+			glm::vec2 center(x*ZONE_SIZE, y*ZONE_SIZE);
 			std::vector<ADVERT_POS> advertPos;
+			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
 			for (size_t i = 0; i < advertsPerZone; ++i) {
-				glm::vec2 randCircle = glm::diskRand((float)ZONE_SIZE);
-				glm::vec2 advertPosition = center + randCircle;
+				//glm::vec2 randCircle = glm::diskRand((float)ZONE_SIZE-1);
+				//glm::vec2 advertPosition = center + randCircle;
+				glm::vec2 advertPosition = glm::linearRand(center, center + glm::vec2(ZONE_SIZE, ZONE_SIZE));
 				cout << "Zone x,y: " << x << "," << y << endl;
 				cout << "advertPosition: " << advertPosition.x << ", " << advertPosition.y << endl;
 
-				advertPos.push_back(std::make_tuple(nullptr, advertPosition));
-			}
-			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
-			advertZones[zoneIndex] = advertPos;
-		}
-	}
-
-	// Move randomly to another advert.
-	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
-		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
-			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
-			auto advertPos = advertZones[zoneIndex];
-			for (size_t i = 0; i < advertsPerZone; ++i) {
 				//Make commands
 				std::queue<AdvertBehaviorTest> behaviors;
 				behaviors.push(AdvertBehaviorTest::MOVE_TO);
 				behaviors.push(AdvertBehaviorTest::WAIT);
 
 				std::queue<glm::vec2> data;
-				data.push(glm::vec2(glm::linearRand(0.0f, NUM_OF_ZONES * 18.0f), glm::linearRand(0.0f, NUM_OF_ZONES * 18.0f)));
+
+				glm::vec2 randomZone(glm::linearRand(0.0f, (float)NUM_OF_ZONES), glm::linearRand(0.0f, (float)NUM_OF_ZONES));
+
+				while((int)randomZone.x == x && (int)randomZone.y == y) {
+					randomZone = glm::vec2(glm::linearRand(0.0f, (float)NUM_OF_ZONES), glm::linearRand(0.0f, (float)NUM_OF_ZONES));
+				}
+
+				randomZone *= ZONE_SIZE;
+
+				data.push(randomZone);
 				data.push(glm::vec2(glm::linearRand(1.0f, 6.0f), 0.0f));
 
 				wss::AdvertCommand command("testcommand", behaviors, data);
 
-				std::vector<wss::ATTRIBUTE_VALUE> deltas = {std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness, within(15)),
-					std::make_pair(wss::Attributes::Health, - 5 - within(5))};
-				std::shared_ptr<Advertisement> advert(new Advertisement(deltas, std::vector<AdvertCommand>({command})));
+				std::vector<wss::ATTRIBUTE_VALUE> deltas = { std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness,
+						within(15)), std::make_pair(wss::Attributes::Health, -5 - within(5)) };
+				std::shared_ptr<Advertisement> advert(new Advertisement(deltas, command));
 
-				advertPos[i] = std::make_pair(advert, std::get<1>(advertPos[i]));
+				//advertPos[i] = std::make_pair(advert, std::get<1>(advertPos[i]));
+
+
+				advertPos.push_back(std::make_tuple(advert, advertPosition));
 			}
 			advertZones[zoneIndex] = advertPos;
 		}
 	}
 
+	/*
+	// Move randomly to another advert.
+	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
+		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
+			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
+			auto advertPos = advertZones[zoneIndex];
+			for (size_t i = 0; i < advertsPerZone; ++i) {
+
+			}
+			advertZones[zoneIndex] = advertPos;
+		}
+	}
+	*/
 
 	// Path generator node. This node will input ID_PATH and generate an path then output it.
-	PATH_FIND_NODE pathGenerator(g, 25, [&pathEntities](std::tuple<size_t, glm::vec2> pathRequest)->PathEntity* {
+	PATH_FIND_NODE pathGenerator(g, tbb::flow::unlimited, [&pathEntities](std::tuple<size_t, glm::vec2, glm::vec2> pathRequest)->PathEntity* {
 		size_t id = std::get<0>(pathRequest);
 		pathEntities[id]->position = std::get<1>(pathRequest);
+		pathEntities[id]->moveTo = std::get<2>(pathRequest);
 		return pathEntities[id];
 	});
 
+	//PROCESS_ATTRIBUTE_NODE* processNext = nullptr;
+
 	// Traverse done node. This node will take input and process an entity for the TRAVERSE_DONE_STATE--it will find nearest advertisement.
-	TRAVERSE_DONE_NODE traverseDone(g, 25, [&](std::tuple<size_t, glm::vec2> traverseDoneEvent)->void {
-		size_t id = get<0>(traverseDoneEvent);
+	PROCESS_ATTRIBUTE_NODE traverseDone(g, tbb::flow::unlimited, [&](std::tuple<size_t, glm::vec2> somethingDoneEvent)->void {
+		size_t id = get<0>(somethingDoneEvent);
 		auto attributeEntity = attributeEntities[id];
-		vec2 position = get<1>(traverseDoneEvent);
-		size_t zoneId = Utils::XYToIndex(position.x / ZONE_SIZE, position.y / ZONE_SIZE, NUM_OF_ZONES);
-		auto adverts = advertZones[zoneId];
+		vec2 position = get<1>(somethingDoneEvent);
 
-		vector<ADVERT_SCORE> scores;
-		for (auto advert_pos : adverts) {
-			auto advert = get<0>(advert_pos);
-			auto position = get<1>(advert_pos);
-			scores.push_back(make_pair(advert.get(), attributeEntity->score(*advert)));
-		}
-		int whichOne = attributeEntity->pickAdvertisement(scores);
-		if (whichOne > -1) {
-			auto pickedAdvert = get<0>(scores[whichOne]);
-			// Get behaviors
-			vector<AdvertCommand> commands = pickedAdvert->getCommands();
-			// For now just generate path.
-			pathGenerator.try_put(make_pair(id, position));
-		}
-		else {
-			cout << "NO SCORE GIRL!" << endl;
-		}
+		AdvertCommand command = attributeEntity->getCommand();
+		AdvertBehaviorTest behavior = command.getBehaviorTree();
+		glm::vec2 data = command.popData();
 
+		auto processCommand = [&id, &position, &pathGenerator](AdvertBehaviorTest behavior, glm::vec2 data) {
+			PROCESS_ATTRIBUTE_NODE* processNext = getProcessNext();
+			switch(behavior) {
+			case AdvertBehaviorTest::MOVE_TO:
+			{
+				//cout << "MOVE_TO COMMAND SELECTED! " << data.x << " , " << data.y << endl;
+				//data = glm::vec2(glm::linearRand(0.0f, (float)MAP_W), glm::linearRand(0.0f, (float)MAP_H));
+				pathGenerator.try_put(make_tuple(id, position, data));
+				break;
+			}
+			case AdvertBehaviorTest::WAIT:
+			{
+				// Do nothing for WAIT. Future use WAIT generator to generate wait.
+
+				if (processNext)
+					processNext->try_put(make_pair(id, position));
+				break;
+			}
+			case AdvertBehaviorTest::NONE:
+				//if (processNext)
+					//processNext->try_put(make_pair(id, position));
+			break;
+			}
+		};
+
+		if (behavior == AdvertBehaviorTest::NONE) { // No commands. Pick new advertisement.
+
+			size_t zoneId = Utils::XYToIndex(position.x / ZONE_SIZE, position.y / ZONE_SIZE, NUM_OF_ZONES);
+			auto adverts = advertZones[zoneId];
+
+			vector<ADVERT_SCORE> scores;
+			for (auto advert_pos : adverts) {
+				auto advert = get<0>(advert_pos);
+				auto position = get<1>(advert_pos);
+				scores.push_back(make_pair(advert.get(), attributeEntity->score(*advert)));
+			}
+			int whichOne = attributeEntity->pickAdvertisement(scores);
+			if (whichOne > -1) {
+				auto pickedAdvert = get<0>(scores[whichOne]);
+				glm::vec2 advertPosition;
+				// Stupid... Find position for this advert
+				for (auto advert_pos : adverts) {
+					auto advert = get<0>(advert_pos);
+					if (advert.get() == pickedAdvert)
+						advertPosition = get<1>(advert_pos);
+				}
+
+				// Get behaviors
+				AdvertCommand command = pickedAdvert->getCommand();
+				//cout << "Scored advertisement!" << endl;
+				// Process the current commands
+				//AdvertBehaviorTest behavior = command.getBehaviorTree();
+				//glm::vec2 data = command.popData();
+				//if (behavior != AdvertBehaviorTest::NONE) {
+					//processCommand(behavior, data);
+				//}
+				//else {
+					//cout << "logical error... no behavior for advert!" << endl;
+				//}
+				// Walk to the selected advertisement
+				AdvertBehaviorTest moveTo = AdvertBehaviorTest::MOVE_TO;
+				processCommand(moveTo, advertPosition);
+
+
+				attributeEntity->setCommands(command); //Current test implementation is copy based so need to reattach command after operation.
+			}
+			else {
+				cout << "NO SCORE GIRL!" << endl;
+			}
+		}
+		else { // There are still commands. Process next command.
+			//AdvertCommand command = attributeEntity->getCommand();
+			//AdvertBehaviorTest behavior = command.getBehaviorTree();
+			//cout << "command behavior size: " << command.getBehaviorTreeSize() << endl;
+			if (behavior != AdvertBehaviorTest::NONE) {
+				processCommand(behavior, data);
+			}
+			else {
+				cout << "logical error... no behavior in advertisement!" << endl;
+			}
+			//cout << "Processed commands!" << endl;
+			attributeEntity->setCommands(command);
+		}
 		return;
 	});
+
+	processNext = new PROCESS_ATTRIBUTE_NODE(g, tbb::flow::unlimited, [&](std::tuple<size_t, glm::vec2> somethingDoneEvent)->void {
+		traverseDone.try_put(somethingDoneEvent);
+	});
+
 
 
 
@@ -335,8 +433,8 @@ int main(int argc, char** argv) {
 		auto start = clock.now();
 		size_t stateStart, stateEnd;
 		stateStart = wss::Utils::XYToIndex(pathEntity->position.x, pathEntity->position.y, MAP_W);
-		stateEnd = wss::Utils::XYToIndex(within(200), within(200), MAP_W );
-
+		//stateEnd = wss::Utils::XYToIndex(within(200), within(200), MAP_W );
+		stateEnd = wss::Utils::XYToIndex(pathEntity->moveTo.x, pathEntity->moveTo.y, MAP_W);
 		int startX,startY,endX,endY;
 
 		wss::Utils::indexToXY(stateStart, MAP_W, startX, startY);

@@ -1,6 +1,8 @@
 #pragma once
 
+#include "wss/wss.h"
 #include "wss/Attributes.h"
+#include "wss/AdvertCommand.h"
 
 namespace wss
 {
@@ -19,10 +21,14 @@ public:
 	float score(const Advertisement &advert);
 	int pickAdvertisement(std::vector<ADVERT_SCORE> &scores);
 
+	AdvertCommand getCommand();
+	void setCommands(const AdvertCommand &command);
+
 	size_t id;
 
 protected:
 private:
 	std::vector<ATTRIBUTE_VALUE> _attributes;
+	AdvertCommand _command;
 };
 }

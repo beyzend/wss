@@ -8,7 +8,8 @@
 
 using namespace wss;
 
-AttributeEntity::AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &attributes) : _attributes(attributes), id(id) {
+AttributeEntity::AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &attributes) :
+		_attributes(attributes), id(id) {
 
 }
 
@@ -42,11 +43,11 @@ float AttributeEntity::score(const Advertisement &advert) {
  */
 int AttributeEntity::pickAdvertisement(std::vector<ADVERT_SCORE> &scores) {
 
-		if (scores.size() < 1)
+	if (scores.size() < 1)
 		return -1;
 
 	// For now use the top one.
-	std::sort(scores.begin(), scores.end(), [](ADVERT_SCORE score1, ADVERT_SCORE score2){
+	std::sort(scores.begin(), scores.end(), [](ADVERT_SCORE score1, ADVERT_SCORE score2) {
 		return std::get<1>(score1) < std::get<1>(score2);
 	});
 
@@ -54,3 +55,10 @@ int AttributeEntity::pickAdvertisement(std::vector<ADVERT_SCORE> &scores) {
 	return 0;
 }
 
+AdvertCommand AttributeEntity::getCommand() {
+	return _command;
+}
+
+void AttributeEntity::setCommands(const AdvertCommand& command) {
+	_command = command;
+}

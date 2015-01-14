@@ -64,7 +64,7 @@ TEST_F(AttributeTest, TestScore) {
 			float constScore = scores[i];
 
 
-			Advertisement advert(attr, commands);
+			Advertisement advert(attr, command);
 			float score = oneEntity.score(advert);
 
 			ASSERT_FLOAT_EQ(constScore, score);
@@ -83,8 +83,8 @@ TEST_F(AttributeTest, TestPickAdvert) {
 
 	std::vector<ATTRIBUTE_VALUE> anotherOne = {std::make_tuple(Attributes::Health, 20)};
 
-	Advertisement advertOne(attributesOne, commands);
-	Advertisement betterOne(anotherOne, commands);
+	Advertisement advertOne(attributesOne, command);
+	Advertisement betterOne(anotherOne, command);
 
 	float scoreOne = oneEntity.score(advertOne);
 	float betterScore = oneEntity.score(betterOne);
