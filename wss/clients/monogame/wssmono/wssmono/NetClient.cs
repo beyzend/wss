@@ -54,7 +54,8 @@ namespace wssmono
 				//Console.WriteLine ("Message position count is {0}", update.positions.Count);
 				//Console.WriteLine ("Message has more: " + hasMore);
 				for (int i = 0; i < update.positions.Count; ++i) {
-					positions [i] = new Vector2 (update.positions [i].x, update.positions [i].y);
+					int id = (int)update.positions [i].id;
+					positions[id] = new Vector2 (update.positions [i].x, update.positions [i].y);
 				}
 			}
 		}

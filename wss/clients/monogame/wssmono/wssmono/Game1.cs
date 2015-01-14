@@ -108,8 +108,13 @@ namespace wssmono
 
 			map.Update (gameTime);
             
+
 			//update entity positions
 			client.getEntityPositions (ref entPositions);
+
+			//cameraWorld.X = entPositions [0].X;
+			//cameraWorld.Y = entPositions [1].Y;
+			cameraWorld = entPositions [1] * 18.0f;
 
 			// TODO: Add your update logic here			
             base.Update(gameTime);
