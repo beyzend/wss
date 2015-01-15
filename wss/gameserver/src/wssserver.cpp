@@ -82,8 +82,10 @@ struct PathEntity {
 };
 
 using PROCESS_ATTRIBUTE_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2>>;
+using WAIT_NODE = tbb::flow::function_node<int>;
 using PATH_FIND_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2, glm::vec2>, PathEntity*>;
 using PATH_SOLVE_NODE = tbb::flow::function_node<PathEntity*, PathEntity*>;
+
 
 
 glm::vec2 randomPosition(glm::vec2 start, glm::vec2 end) {
@@ -133,6 +135,52 @@ void serializeEntities(rapidjson::Document &root, size_t start, size_t end, tbb:
 
 }
 
+void processWaitCallbacks(PROCESS_ATTRIBUTE_NODE *nextNode, tbb::concurrent_queue<std::tuple<std::tuple<size_t, glm::vec2>,
+		std::tuple<double, std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double>>>>> &waitQueue) {
+	using namespace std;
+	using namespace wss;
+
+	chrono::steady_clock clock;
+
+	while (1) {
+		bool more = false;
+		if (nextNode == nullptr)
+			continue;
+		do {
+
+			tuple<tuple<size_t, glm::vec2>, tuple<double, chrono::time_point<chrono::steady_clock, chrono::duration<double>>>> waitThing;
+			more = waitQueue.try_pop(waitThing);
+
+			if (more) {
+				auto idPosition = get<0>(waitThing);
+				auto timeStuff = get<1>(waitThing);
+				auto timeToWait = get<0>(timeStuff);
+				auto timeStart = get<1>(timeStuff);
+
+				if (timeStart == chrono::time_point<chrono::steady_clock, chrono::duration<double>>::min())
+					timeStart = clock.now();
+
+				chrono::duration<double> elapsed = clock.now() - timeStart;
+
+				//cout << "elapsed duration for id: " << get<0>(idPosition) << " elapsed: "<< elapsed.count() << " wait time: " << timeToWait << endl;
+
+				if (elapsed.count() > timeToWait) {
+					bool mustPut = nextNode->try_put(idPosition);
+					while (!mustPut) {
+						mustPut = nextNode->try_put(idPosition);
+					}
+				}
+				else {
+					timeStuff = make_pair(timeToWait, timeStart);
+					waitThing = make_pair(idPosition, timeStuff);
+					waitQueue.push(waitThing);
+				}
+			}
+		}while(more);
+		//std::this_thread::sleep()
+	}
+
+}
 
 void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathFindNode, tbb::concurrent_queue<PathEntity*> &solvedPathQueue, tbb::concurrent_vector<Entity*> entities) {
 	using namespace std;
@@ -198,12 +246,17 @@ void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathF
 	}
 }
 
+WAIT_NODE* waitNode = nullptr;
+
 PROCESS_ATTRIBUTE_NODE* processNext = nullptr;
 
 PROCESS_ATTRIBUTE_NODE* getProcessNext() {
 	return processNext;
 }
 
+WAIT_NODE* getWaitNode() {
+	return waitNode;
+}
 
 int main(int argc, char** argv) {
 	using namespace std;
@@ -218,12 +271,15 @@ int main(int argc, char** argv) {
 	size_t i;
 	tbb::flow::graph g;
 
+
+
 	// SETUP ENTITIES
 
 	// Use a memory allocator here.
 	tbb::concurrent_vector<Entity*> entities;
 	std::vector<PathEntity*> pathEntities;
 	std::vector<std::shared_ptr<AttributeEntity>> attributeEntities;
+	tbb::concurrent_queue< std::tuple<tuple<size_t, glm::vec2>, tuple<double, chrono::time_point<chrono::steady_clock, chrono::duration<double> > > > > waitQueue;
 
 	glm::vec2 start(30,30), end(80,50);
 	for (size_t i = 0; i < 1000; ++i) {
@@ -263,6 +319,7 @@ int main(int argc, char** argv) {
 
 				//Make commands
 				std::queue<AdvertBehaviorTest> behaviors;
+				behaviors.push(AdvertBehaviorTest::WAIT);
 				behaviors.push(AdvertBehaviorTest::MOVE_TO);
 				behaviors.push(AdvertBehaviorTest::WAIT);
 
@@ -276,6 +333,7 @@ int main(int argc, char** argv) {
 
 				randomZone *= ZONE_SIZE;
 
+				data.push(glm::vec2(glm::linearRand(1.0f, 6.0f), 0.0f));
 				data.push(randomZone);
 				data.push(glm::vec2(glm::linearRand(1.0f, 6.0f), 0.0f));
 
@@ -285,28 +343,11 @@ int main(int argc, char** argv) {
 						within(15)), std::make_pair(wss::Attributes::Health, -5 - within(5)) };
 				std::shared_ptr<Advertisement> advert(new Advertisement(deltas, command));
 
-				//advertPos[i] = std::make_pair(advert, std::get<1>(advertPos[i]));
-
-
 				advertPos.push_back(std::make_tuple(advert, advertPosition));
 			}
 			advertZones[zoneIndex] = advertPos;
 		}
 	}
-
-	/*
-	// Move randomly to another advert.
-	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
-		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
-			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
-			auto advertPos = advertZones[zoneIndex];
-			for (size_t i = 0; i < advertsPerZone; ++i) {
-
-			}
-			advertZones[zoneIndex] = advertPos;
-		}
-	}
-	*/
 
 	// Path generator node. This node will input ID_PATH and generate an path then output it.
 	PATH_FIND_NODE pathGenerator(g, tbb::flow::unlimited, [&pathEntities](std::tuple<size_t, glm::vec2, glm::vec2> pathRequest)->PathEntity* {
@@ -317,7 +358,7 @@ int main(int argc, char** argv) {
 	});
 
 	//PROCESS_ATTRIBUTE_NODE* processNext = nullptr;
-
+	chrono::steady_clock clock;
 	// Traverse done node. This node will take input and process an entity for the TRAVERSE_DONE_STATE--it will find nearest advertisement.
 	PROCESS_ATTRIBUTE_NODE traverseDone(g, tbb::flow::unlimited, [&](std::tuple<size_t, glm::vec2> somethingDoneEvent)->void {
 		size_t id = get<0>(somethingDoneEvent);
@@ -328,22 +369,25 @@ int main(int argc, char** argv) {
 		AdvertBehaviorTest behavior = command.getBehaviorTree();
 		glm::vec2 data = command.popData();
 
-		auto processCommand = [&id, &position, &pathGenerator](AdvertBehaviorTest behavior, glm::vec2 data) {
+		auto processCommand = [&id, &position, &pathGenerator, &waitQueue](AdvertBehaviorTest behavior, glm::vec2 data) {
 			PROCESS_ATTRIBUTE_NODE* processNext = getProcessNext();
 			switch(behavior) {
 			case AdvertBehaviorTest::MOVE_TO:
 			{
 				//cout << "MOVE_TO COMMAND SELECTED! " << data.x << " , " << data.y << endl;
 				//data = glm::vec2(glm::linearRand(0.0f, (float)MAP_W), glm::linearRand(0.0f, (float)MAP_H));
-				pathGenerator.try_put(make_tuple(id, position, data));
+
+				// random offset to
+				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE / 4.0f);
+
+				pathGenerator.try_put(make_tuple(id, position, data + randomVec * glm::linearRand(0.1f, 1.0f)));
 				break;
 			}
 			case AdvertBehaviorTest::WAIT:
 			{
+				double randomWaitTime = data.x + glm::linearRand(0.0f, 6.0f);
 				// Do nothing for WAIT. Future use WAIT generator to generate wait.
-
-				if (processNext)
-					processNext->try_put(make_pair(id, position));
+				waitQueue.push(make_pair(make_pair(id, position), make_pair(randomWaitTime, chrono::time_point<chrono::steady_clock, chrono::duration<double> >::min())));
 				break;
 			}
 			case AdvertBehaviorTest::NONE:
@@ -377,16 +421,6 @@ int main(int argc, char** argv) {
 
 				// Get behaviors
 				AdvertCommand command = pickedAdvert->getCommand();
-				//cout << "Scored advertisement!" << endl;
-				// Process the current commands
-				//AdvertBehaviorTest behavior = command.getBehaviorTree();
-				//glm::vec2 data = command.popData();
-				//if (behavior != AdvertBehaviorTest::NONE) {
-					//processCommand(behavior, data);
-				//}
-				//else {
-					//cout << "logical error... no behavior for advert!" << endl;
-				//}
 				// Walk to the selected advertisement
 				AdvertBehaviorTest moveTo = AdvertBehaviorTest::MOVE_TO;
 				processCommand(moveTo, advertPosition);
@@ -417,8 +451,6 @@ int main(int argc, char** argv) {
 	processNext = new PROCESS_ATTRIBUTE_NODE(g, tbb::flow::unlimited, [&](std::tuple<size_t, glm::vec2> somethingDoneEvent)->void {
 		traverseDone.try_put(somethingDoneEvent);
 	});
-
-
 
 
 
@@ -461,6 +493,10 @@ int main(int argc, char** argv) {
 	});
 
 	tbb::flow::make_edge(pathGenerator, solvePathNode);
+
+	std::thread waitProcessThread([&]() {
+		processWaitCallbacks(processNext, waitQueue);
+	});
 
 	g.wait_for_all();
 
