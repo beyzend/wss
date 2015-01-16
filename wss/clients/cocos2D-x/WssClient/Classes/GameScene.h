@@ -18,15 +18,17 @@ public:
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
 
-    virtual void update(float dt);
+    void update(float dt);
 
 
 private:
     cocos2d::TMXTiledMap *_tileMap;
     cocos2d::TMXLayer *_background;
 
-    cocos2d::Vec2 offset;
+    cocos2d::Sprite* _cat;
+    cocos2d::Node* _camera;
 
+    cocos2d::Vec2 _centerOfScreen;
 
 };
 
