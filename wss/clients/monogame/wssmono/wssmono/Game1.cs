@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Storage;
 using Microsoft.Xna.Framework.Input;
 
 
+
 using NetMQ;
 using NetMQ.Sockets;
 #endregion
@@ -30,6 +31,9 @@ namespace wssmono
 		List<Vector2> entPositions = null;
 
 		NetClient client = null;
+
+		SpriteFont font;
+
 
         public Game1()
         {
@@ -73,7 +77,8 @@ namespace wssmono
 
 			client = new NetClient ();
 			client.connectToServer ();
-
+			//font = Content.load<SpriteFont> ("Content/graphics/Times New Roman Bold 21");
+			font = Content.Load<SpriteFont> ("Content/graphics/defaultFont");
 		}
 
         /// <summary>

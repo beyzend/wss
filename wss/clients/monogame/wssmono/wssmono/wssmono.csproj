@@ -36,22 +36,40 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="OpenTK">
-      <Package>opentk</Package>
-    </Reference>
-    <Reference Include="MonoGame.Framework.Linux">
-      <Package>monogame</Package>
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\OpenTK.dll</HintPath>
     </Reference>
     <Reference Include="Lidgren.Network">
-      <Package>monogame</Package>
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\Lidgren.Network.dll</HintPath>
     </Reference>
     <Reference Include="Tao.Sdl">
-      <Package>tao-sdl</Package>
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\Tao.Sdl.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NetMQ">
       <HintPath>..\packages\NetMQ.3.3.0.11\lib\net40\NetMQ.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework">
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework.Net">
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework\bin\Linux\AnyCPU\Release\MonoGame.Framework.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoGame.Framework.Content.Pipeline">
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework.Content.Pipeline\bin\Linux\AnyCPU\Release\MonoGame.Framework.Content.Pipeline.dll</HintPath>
+    </Reference>
+    <Reference Include="Nvidia.TextureTools">
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework.Content.Pipeline\bin\Linux\AnyCPU\Release\Nvidia.TextureTools.dll</HintPath>
+    </Reference>
+    <Reference Include="AssimpNet">
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework.Content.Pipeline\bin\Linux\AnyCPU\Release\AssimpNet.dll</HintPath>
+    </Reference>
+    <Reference Include="ManagedPVRTC">
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework.Content.Pipeline\bin\Linux\AnyCPU\Release\ManagedPVRTC.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpFont">
+      <HintPath>..\..\..\..\..\..\..\MonoGame\MonoGame.Framework.Content.Pipeline\bin\Linux\AnyCPU\Release\SharpFont.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

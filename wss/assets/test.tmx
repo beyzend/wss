@@ -3,7 +3,7 @@
  <tileset firstgid="1" name="ironhand" tilewidth="18" tileheight="18">
   <image source="../public/images/art/ironhand_diagonal.png" width="288" height="288"/>
  </tileset>
- <layer name="Tile Layer 1" width="200" height="200">
+ <layer name="Background" width="200" height="200">
   <data>
    <tile gid="24"/>
    <tile gid="24"/>
