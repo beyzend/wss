@@ -2,4 +2,5 @@
 wss/build
 wss/clients/monogame/wssmono/wssmono/bin
 wss/clients/cocos2D-x/WssClientBuild
-wss/clients/cocos2D-x/WssClient/cocos2d/*.* 
+wss/clients/cocos2D-x/WssClient/cocos2d
+wss/assets 
