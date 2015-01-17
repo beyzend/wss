@@ -1,7 +1,10 @@
 #ifndef __HELLOWORLD_SCENE_H__
 #define __HELLOWORLD_SCENE_H__
 
+#include <vector>
+
 #include "cocos2d.h"
+#include "Network/Client.h"
 
 class HelloWorld : public cocos2d::Layer
 {
@@ -26,10 +29,17 @@ private:
     cocos2d::TMXLayer *_background;
 
     cocos2d::Sprite* _cat;
+    cocos2d::Vec2 _catWorld;
     cocos2d::Node* _camera;
+
+    std::vector<cocos2d::Sprite*> _entities;
+    std::vector<cocos2d::Vec2> _positions;
 
     cocos2d::Vec2 _centerOfScreen;
 
+    cocos2d::Vec2 _screenOrigin;
+
+    WssClient::NetworkClient _client;
 };
 
 #endif // __HELLOWORLD_SCENE_H__

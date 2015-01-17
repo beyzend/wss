@@ -78,7 +78,7 @@ namespace wssmono
 			client = new NetClient ();
 			client.connectToServer ();
 			//font = Content.load<SpriteFont> ("Content/graphics/Times New Roman Bold 21");
-			font = Content.Load<SpriteFont> ("Content/graphics/defaultFont");
+			//font = Content.Load<SpriteFont> ("Content/graphics/defaultFont");
 		}
 
         /// <summary>

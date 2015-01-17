@@ -38,6 +38,12 @@ set(BUILD_CPP_TESTS OFF CACHE BOOL "turn off build cpp-tests")
 set(BUILD_LUA_LIBS OFF CACHE BOOL "turn off build lua-tests")
 add_subdirectory(${COCOS2D_ROOT})
 
+# libs
+find_library(LIB_ZMQ zmq)
+find_library(LIB_ZMQPP zmqpp)
+find_library(LIB_PTHREAD pthread)
+
+
 # Some macro definitions
 if(WINDOWS)
   if(BUILD_SHARED_LIBS)
@@ -72,7 +78,7 @@ else()
   set(CMAKE_C_FLAGS_DEBUG "-g -Wall -DCOCOS2D_DEBUG=1")
   set(CMAKE_CXX_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -std=c99")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -std=c++11 -Wno-deprecated-declarations -Wno-reorder")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declarations -Wno-reorder")
   if(CLANG)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
   endif()
@@ -116,12 +122,14 @@ include_directories(
 set(GAME_SRC
   Classes/AppDelegate.cpp
   Classes/GameScene.cpp
+  Classes/Network/Client.cpp
   ${PLATFORM_SPECIFIC_SRC}
 )
 
 set(GAME_HEADERS
   Classes/AppDelegate.h
   Classes/GameScene.h
+  Classes/Network/Client.h
   ${PLATFORM_SPECIFIC_HEADERS}
 )
 
@@ -131,7 +139,7 @@ else()
 add_executable(${APP_NAME} ${GAME_SRC})
 endif()
 
-target_link_libraries(${APP_NAME} cocos2d)
+target_link_libraries(${APP_NAME} cocos2d ${LIB_ZMQ} ${LIB_ZMQPP} ${LIB_PTHREAD})
 
 set(APP_BIN_DIR "${CMAKE_BINARY_DIR}/bin")
 

@@ -41,11 +41,14 @@
 
 #define GLM_FORCE_SSSE3
 
-const size_t MAP_W = 200;
-const size_t MAP_H = 200;
+const size_t MAP_W = 100;
+const size_t MAP_H = 100;
 
-size_t ZONE_SIZE = 20;
-size_t NUM_OF_ZONES = MAP_W / ZONE_SIZE;
+//glm::vec2 start(12,1), end(72,54);
+
+size_t ZONE_SIZE = 5;
+size_t NUM_OF_ZONES = (MAP_W) / ZONE_SIZE;
+
 
 struct Entity {
 
@@ -192,6 +195,8 @@ void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathF
 		pathFindNode.try_put(make_pair(entity->id, entity->position));//(std::tuple<size_t, glm::vec2>(entity->id, entity->position));
 	}
 
+	size_t lastI = 0;
+
 	while (1) {
 		auto start = clock.now();
 
@@ -226,19 +231,45 @@ void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathF
 		}
 
 		{
-			rapidjson::Document document;
-			document.SetObject();
-			serializeEntities(document, 0, entities.size(), entities);
+//			rapidjson::Document document;
+//			document.SetObject();
+//			serializeEntities(document, 0, entities.size(), entities);
+//
+//			rapidjson::StringBuffer sb;
+//			rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+//
+//			document.Accept(writer);
 
-			rapidjson::StringBuffer sb;
-			rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+			//publisher.send(sb.GetString(), true);
 
-			document.Accept(writer);
+			zmqpp::message_t message;
 
-			publisher.send(sb.GetString());
+			bool sendOut = false;
+
+			//for (auto entity : entities) {
+				//if (entity->pathNodes) {
+					//sendOut = true;
+					//message << entity->id << entity->position.x << entity->position.y;
+				//}
+			//}
+
+			for (size_t i = 0; i < 1000; ++i) {
+				auto entity = entities[lastI++ % 1000];
+				if (entity->pathNodes) {
+					sendOut = true;
+					message << entity->id << entity->position.x << entity->position.y;
+				}
+			}
+
+
+			if (sendOut) {
+				publisher.send(message, false);
+			}
+
+
 		}
 		std::chrono::duration<double> elapsed = clock.now() - start;
-		if (elapsed.count() < 1.0/5.0) {
+		if (elapsed.count() < 1.0/20.0) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000/5 - (size_t)(elapsed.count() * 1000.0)));
 		//cout << "elpased region publisher" << endl;
 		}
@@ -281,7 +312,7 @@ int main(int argc, char** argv) {
 	std::vector<std::shared_ptr<AttributeEntity>> attributeEntities;
 	tbb::concurrent_queue< std::tuple<tuple<size_t, glm::vec2>, tuple<double, chrono::time_point<chrono::steady_clock, chrono::duration<double> > > > > waitQueue;
 
-	glm::vec2 start(30,30), end(80,50);
+	glm::vec2 start(12,1), end(72,54);
 	for (size_t i = 0; i < 1000; ++i) {
 		glm::vec2 position = randomPosition(start, end);
 		pathEntities.push_back(new PathEntity(i, position));
@@ -375,10 +406,10 @@ int main(int argc, char** argv) {
 			case AdvertBehaviorTest::MOVE_TO:
 			{
 				//cout << "MOVE_TO COMMAND SELECTED! " << data.x << " , " << data.y << endl;
-				//data = glm::vec2(glm::linearRand(0.0f, (float)MAP_W), glm::linearRand(0.0f, (float)MAP_H));
+				//data = glm::vec2(glm::linearRand(12.0f, (float)72), glm::linearRand(1.0f, (float)54));
 
 				// random offset to
-				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE / 4.0f);
+				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE);
 
 				pathGenerator.try_put(make_tuple(id, position, data + randomVec * glm::linearRand(0.1f, 1.0f)));
 				break;
@@ -424,7 +455,7 @@ int main(int argc, char** argv) {
 				// Walk to the selected advertisement
 				AdvertBehaviorTest moveTo = AdvertBehaviorTest::MOVE_TO;
 				processCommand(moveTo, advertPosition);
-
+				//AdvertBehaviorTest behavior = command.getB
 
 				attributeEntity->setCommands(command); //Current test implementation is copy based so need to reattach command after operation.
 			}
