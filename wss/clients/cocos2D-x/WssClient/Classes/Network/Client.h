@@ -13,7 +13,7 @@ public:
 	virtual ~NetworkClient();
 
 	void connect();
-	bool updatePositions(size_t numToRead, std::vector<cocos2d::Vec2> &positions);
+	bool updatePositions(std::vector<cocos2d::Sprite*> &positions);
 private:
 	zmqpp::context _context;
 	zmqpp::socket _regionDataSocket;

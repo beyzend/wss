@@ -30,10 +30,12 @@ private:
 
     cocos2d::Sprite* _cat;
     cocos2d::Vec2 _catWorld;
+    cocos2d::Node* _originNode;
     cocos2d::Node* _camera;
+    size_t _camOnIndex = 0;
+
 
     std::vector<cocos2d::Sprite*> _entities;
-    std::vector<cocos2d::Vec2> _positions;
 
     cocos2d::Vec2 _centerOfScreen;
 

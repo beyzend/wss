@@ -22,7 +22,7 @@ void NetworkClient::connect() {
 
 }
 
-bool NetworkClient::updatePositions(size_t numToRead, vector<Vec2> &positions) {
+bool NetworkClient::updatePositions(vector<Sprite*> &entities) {
 	bool updated = false;
 
 	zmqpp::message_t message;
@@ -33,11 +33,8 @@ bool NetworkClient::updatePositions(size_t numToRead, vector<Vec2> &positions) {
 			size_t id;
 			float x,y;
 			message >> id >> x >> y;
-			positions[id] = Vec2(x * 16.0, y * 16.0);//->setPosition(Vec2(x * 16.0, -y * 16.0) + worldToCamera);
-
-			if (i%100 == 0) {
-				//cout << "id,x,y: " << id << ", " << x << ", " << y << endl;
-			}
+			//positions[id] = Vec2(x * 16.0, y * 16.0);//->setPosition(Vec2(x * 16.0, -y * 16.0) + worldToCamera);
+			entities[id]->setPosition(x * 16.0, -y * 16.0);
 		}
 	}
 	return updated;
