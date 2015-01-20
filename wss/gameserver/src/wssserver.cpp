@@ -50,7 +50,7 @@ const size_t MAP_H = 100;
 size_t ZONE_SIZE = 5;
 size_t NUM_OF_ZONES = (MAP_W) / ZONE_SIZE;
 
-size_t ENT_TO_CREATE = 10;
+size_t ENT_TO_CREATE = 1000;
 
 struct Entity {
 
@@ -248,13 +248,6 @@ void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathF
 
 			bool sendOut = false;
 
-			//for (auto entity : entities) {
-				//if (entity->pathNodes) {
-					//sendOut = true;
-					//message << entity->id << entity->position.x << entity->position.y;
-				//}
-			//}
-
 			for (auto entity : entities) {
 				if (entity->pathNodes) {
 					sendOut = true;
@@ -262,17 +255,14 @@ void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathF
 				}
 			}
 
-
 			if (sendOut) {
 				publisher.send(message, false);
 			}
-
 
 		}
 		std::chrono::duration<double> elapsed = clock.now() - start;
 		if (elapsed.count() < 1.0/20.0) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000/5 - (size_t)(elapsed.count() * 1000.0)));
-		//cout << "elpased region publisher" << endl;
 		}
 
 	}
@@ -304,7 +294,7 @@ int main(int argc, char** argv) {
 	tbb::flow::graph g;
 
 	// Parse map
-	Map jsonMap("test3.json");
+	Map jsonMap("test4.json");
 
 
 	// SETUP ENTITIES
@@ -403,14 +393,25 @@ int main(int argc, char** argv) {
 		AdvertBehaviorTest behavior = command.getBehaviorTree();
 		glm::vec2 data = command.popData();
 
-		auto processCommand = [&id, &position, &pathGenerator, &waitQueue](AdvertBehaviorTest behavior, glm::vec2 data) {
+		auto processCommand = [&id, &position, &pathGenerator, &waitQueue, &jsonMap](AdvertBehaviorTest behavior, glm::vec2 data) {
 			PROCESS_ATTRIBUTE_NODE* processNext = getProcessNext();
 			switch(behavior) {
 			case AdvertBehaviorTest::MOVE_TO:
 			{
 				//cout << "MOVE_TO COMMAND SELECTED! " << data.x << " , " << data.y << endl;
 				//glm::vec2 start(18,4), end(67,8);
-				data = glm::vec2(glm::linearRand(18.0f, (float)67), glm::linearRand(4.0f, (float)8));
+				const Layer& layer = jsonMap.getAdvertLayer();
+				size_t randomIdx = within(layer.objects.size());
+				//cout << "layer.object.size: " << layer.objects.size() << endl;
+				//cout << "randomIdx: " << randomIdx << endl;
+				const LayerObject& object = layer.objects[randomIdx];
+				data = vec2((int)(object.x / 16.0f), (int)(object.y / 16.0));
+
+				//cout << "data: " << data.x << " , " << data.y << endl;
+
+				//data = glm::vec2(glm::linearRand(18.0f, (float)67), glm::linearRand(4.0f, (float)8));
+				// Pick a random object
+
 
 				// random offset to
 				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE);

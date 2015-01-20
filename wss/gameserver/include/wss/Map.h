@@ -21,9 +21,28 @@ using std::string;
 using std::ostream;
 using std::cout;
 using std::endl;
+
+struct LayerObject
+{
+	int32_t gid = 0;
+	string name = "";
+	int32_t x = 0;
+	int32_t y = 0;
+
+	explicit LayerObject(){}
+
+	LayerObject(const rapidjson::Value& objectJSON) {
+		gid = objectJSON["gid"].GetInt();
+		name = objectJSON["name"].GetString();
+		x = objectJSON["x"].GetInt();
+		y = objectJSON["y"].GetInt();
+	}
+};
+
 struct Layer
 {
 	vector<int32_t> data;
+	vector<LayerObject> objects;
 	int32_t height;
 	string name = "";
 	int32_t opacity = 1;
@@ -33,12 +52,23 @@ struct Layer
 	int32_t x = 0;
 	int32_t y = 0;
 
-	explicit Layer(){};
+	explicit Layer(){}
+
 	Layer(const rapidjson::Value& layerJSON) {
-		const rapidjson::Value& dataJSON = layerJSON["data"];
-		for (rapidjson::SizeType i = 0; i < dataJSON.Size(); ++i) {
-			data.push_back(dataJSON[i].GetInt());
+		if (layerJSON.HasMember("data")) {
+			const rapidjson::Value& dataJSON = layerJSON["data"];
+			for (rapidjson::SizeType i = 0; i < dataJSON.Size(); ++i) {
+				data.push_back(dataJSON[i].GetInt());
+			}
 		}
+		if (layerJSON.HasMember("objects")) {
+			const rapidjson::Value& dataJSON = layerJSON["objects"];
+			for (rapidjson::SizeType i = 0; i < dataJSON.Size(); ++i) {
+				LayerObject object(dataJSON[i]);
+				objects.push_back(object);
+			}
+		}
+
 		height = layerJSON["height"].GetInt();
 		name = layerJSON["name"].GetString();
 		opacity = layerJSON["opacity"].GetInt();
@@ -58,6 +88,8 @@ struct Layer
 		os << "width: " << layer.width << " ";
 		os << "x: " << layer.x << " ";
 		os << "y: " << layer.y;
+		os << "data size: " << layer.data.size();
+		os << "objects size: " << layer.objects.size();
 		return os;
 	}
 
@@ -92,9 +124,10 @@ public:
 	virtual ~Map();
 
 	const Layer& getCollisionLayer() const;
-
+	const Layer& getAdvertLayer() const;
 private:
 	Layer _floorLayer;
+	Layer _advertisementLayer;
 	//TiledMap tiledMap;
 };
 

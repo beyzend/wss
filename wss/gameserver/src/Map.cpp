@@ -38,6 +38,9 @@ Map::Map(const std::string &fileName) {
 			if (layer.name == "floor") {
 				_floorLayer = layer;
 			}
+			else if(layer.name == "advertisements") {
+				_advertisementLayer = layer;
+			}
 		}
 	}
 	catch (std::string error) {
@@ -57,4 +60,6 @@ const Layer& Map::getCollisionLayer() const {
 	return _floorLayer;
 }
 
-
+const Layer& Map::getAdvertLayer() const {
+	return _advertisementLayer;
+}
