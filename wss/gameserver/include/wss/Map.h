@@ -10,6 +10,8 @@
 #include <vector>
 #include <iostream>
 
+#include "wss/Utils.h"
+
 namespace wss
 {
 
@@ -80,19 +82,20 @@ struct TiledMap
 
 	std::vector<wss::Layer> layers;
 	std::vector<wss::Tilesets> tilesets;
-
 };
+
+
 
 class Map {
 public:
 	Map(const std::string &fileName);
 	virtual ~Map();
 
-	void printCollisionLayer();
+	const Layer& getCollisionLayer() const;
 
 private:
-	rapidjson::Document mapDocument;
-
+	Layer _floorLayer;
+	//TiledMap tiledMap;
 };
 
 }

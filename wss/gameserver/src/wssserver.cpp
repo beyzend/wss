@@ -305,7 +305,6 @@ int main(int argc, char** argv) {
 
 	// Parse map
 	Map jsonMap("test3.json");
-	jsonMap.printCollisionLayer();
 
 
 	// SETUP ENTITIES
@@ -492,8 +491,8 @@ int main(int argc, char** argv) {
 	tbb::concurrent_queue<PathEntity*> solvedPathQueue;
 
 	// Path return node. This node will take input ID_PATH and return it to it's corresponding path entity.
-	PATH_SOLVE_NODE solvePathNode(g, 25, [&map, &solvedPathQueue](PathEntity* pathEntity)->PathEntity*{
-		wss::Path path(MAP_W, MAP_H, map);
+	PATH_SOLVE_NODE solvePathNode(g, 25, [&map, &solvedPathQueue, &jsonMap](PathEntity* pathEntity)->PathEntity*{
+		wss::Path path(jsonMap.getCollisionLayer());
 		micropather::MicroPather pather(&path);
 		std::chrono::steady_clock clock;
 

@@ -4,12 +4,14 @@
 
 namespace wss {
 
+struct Layer;
+
 class Path : public micropather::Graph
 {
 public:
-	Path(unsigned int mapWidth, unsigned int mapHeight, const std::vector<unsigned int>& map);
+	Path(const Layer& layer);
 
-	void setMap(unsigned int mapWidth, unsigned int mapHeight, const std::vector<unsigned int>& map);
+	void setMap(const Layer& layer);
 
 	/**
 	 * Return the least possible cost between 2 states.
@@ -23,8 +25,6 @@ public:
 	virtual void PrintStateInfo(void* state);
 
 private:
-	const std::vector<unsigned int>& map;
-	unsigned int mapWidth, mapHeight;
-
+	const Layer& _layer;
 };
 }

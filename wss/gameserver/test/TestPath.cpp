@@ -18,6 +18,8 @@
 #include "gtest.h"
 #include "wss/Path.h"
 
+#include "wss/Map.h"
+
 class PathTest : public ::testing::Test {
 protected:
 	PathTest() {
@@ -59,60 +61,90 @@ protected:
 	size_t mapWidth = 10;
 	size_t mapHeight = 10;
 
+
+
 };
 
 TEST_F(PathTest, TestLowCost) {
+	using namespace wss;
+
 	size_t stateStart, stateEnd;
 
 	xyToIndex(0, 0, stateStart, 10);
 	xyToIndex(1, 1, stateEnd, 10);
 
-	wss::Path* path0 = new wss::Path(10, 10, map);
+	Layer layer;
+	layer.width = 10;
+	layer.height = 10;
+
+	layer.data = std::vector<int32_t>({
+				  1,1,0,0,0,0,0,0,0,0,
+				  1,1,0,0,0,0,0,0,0,0,
+				  0,0,1,0,0,0,0,0,0,0,
+				  1,0,0,1,0,0,0,0,0,0,
+				  0,0,0,1,0,0,0,0,0,0,
+				  0,0,0,1,0,0,0,0,0,0,
+				  0,0,0,1,0,0,0,0,0,0,
+				  0,0,0,1,0,0,0,0,0,0,
+				  0,0,0,1,0,0,0,0,0,0,
+				  0,0,0,1,0,0,0,0,0,0
+			});
+
+	wss::Path* path0 = new wss::Path(layer);
 
 	// Test basic function
-
 	float cost = path0->LeastCostEstimate((void*)stateStart, (void*)stateEnd);
 
-	float constantCost = 1.414214;
+	float constantCost = 1.41421f;
 
-	ASSERT_FLOAT_EQ(cost, constantCost);
+	ASSERT_NEAR(constantCost, cost, 0.0001f);
 
-	// dx = 230-3, dy = 323-2344; sqrt(dx*dx + dy*dy) =
-	constantCost = 2033.708435;
-	xyToIndex(230, 323, stateStart, 50000);
-	xyToIndex(3, 2344, stateEnd, 50000);
+	xyToIndex(1, 0, stateStart, 10);
+	xyToIndex(2, 1, stateEnd, 10);
 
-	path0 = new wss::Path(50000, 50000, map);
+	float scale = layer.width * 2.0f;
 
-	cost = path0->LeastCostEstimate((void*)stateStart, (void*)stateEnd);
-	ASSERT_FLOAT_EQ(cost, constantCost);
+	constantCost *= scale;
 
-	xyToIndex(5,5, stateStart, 100);
-	xyToIndex(4,5, stateEnd, 100);
-
-	path0 = new wss::Path(100, 100, map);
+	path0 = new wss::Path(layer);
 
 	cost = path0->LeastCostEstimate((void*)stateStart, (void*)stateEnd);
-	ASSERT_FLOAT_EQ(cost, glm::length(glm::vec2(4,5) - glm::vec2(5,5)));
-
+	ASSERT_NEAR(constantCost, cost, 0.0001f);
 }
 
 TEST_F(PathTest, TestAdjacentCost) {
 
 	using namespace glm;
-
+	using namespace wss;
 	// Assuming cells: [1, 0], [0, 1], [1, 1]
 
 
 
 	auto checkCells = [this](vec2 stateVec, std::vector<vec2> &cells){
 
+		Layer layer;
+		layer.width = 10;
+		layer.height = 10;
+
+		layer.data = std::vector<int32_t>( {
+					1,1,0,0,0,0,0,0,0,0,
+					1,1,1,0,0,0,0,0,0,0,
+					0,0,1,0,0,0,0,0,0,0,
+					1,0,0,1,0,0,0,0,0,0,
+					0,0,0,1,0,0,0,0,0,0,
+					0,0,0,1,0,0,0,0,0,0,
+					0,0,0,1,0,0,0,0,0,0,
+					0,0,0,1,0,0,0,0,0,0,
+					0,0,0,1,0,0,0,0,0,0,
+					0,0,0,1,0,0,0,0,0,0
+				});
+
 		MP_VECTOR<micropather::StateCost> adj;
 
 		size_t state;
 		xyToIndex(stateVec.x, stateVec.y, state, mapWidth);
 
-		wss::Path *path0 = new wss::Path(mapWidth, mapHeight, map);
+		wss::Path *path0 = new wss::Path(layer);
 
 		path0->AdjacentCost((void*)state, &adj);
 
@@ -129,7 +161,11 @@ TEST_F(PathTest, TestAdjacentCost) {
 			});
 
 			ASSERT_NE(cells.end(), iterator);
-			ASSERT_FLOAT_EQ(stateCost.cost, glm::length((stateVec - stateCell)));
+			size_t cellIndex;
+			xyToIndex(stateCell.x, stateCell.y, cellIndex, layer.width);
+			std::int32_t data = layer.data[cellIndex];
+			float scale = (data != 0) ? 1.0f : layer.width * 2.0f;
+			ASSERT_NEAR(glm::length(stateVec - stateCell) * scale, stateCost.cost, 0.0001);
 		}
 	};
 

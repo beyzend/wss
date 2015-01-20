@@ -8,6 +8,7 @@ using namespace std;
 
 Map::Map(const std::string &fileName) {
 
+	rapidjson::Document mapDocument;
 	cout << "read map file: " << fileName << endl;
 	ifstream inFile(fileName, ios::binary | ios::in);
 	try {
@@ -26,6 +27,18 @@ Map::Map(const std::string &fileName) {
 		{
 			throw "Failed parse in situ file.";
 		}
+		// Layers
+		const rapidjson::Value& layersValue = mapDocument["layers"];
+		cout << "layers is array: " << layersValue.IsArray() << endl;
+		for (rapidjson::SizeType i = 0; i < layersValue.Size(); ++i) {
+			const rapidjson::Value& value = layersValue[i];
+			cout << "name: " << value["name"].GetString() << endl;
+			Layer layer(layersValue[i]);
+			cout << layer << endl;
+			if (layer.name == "floor") {
+				_floorLayer = layer;
+			}
+		}
 	}
 	catch (std::string error) {
 		cout << "Error parsing map: " << error << endl;
@@ -40,20 +53,8 @@ Map::~Map() {
 
 }
 
-void Map::printCollisionLayer() {
-	TiledMap tiledMap;
-	// Layers
-	vector<Layer> &layers = tiledMap.layers;
-	const rapidjson::Value& layersValue = mapDocument["layers"];
-	cout << "layers is array: " << layersValue.IsArray() << endl;
-	for (rapidjson::SizeType i = 0; i < layersValue.Size(); ++i) {
-		const rapidjson::Value& value = layersValue[i];
-		cout << "name: " << value["name"].GetString() << endl;
-		Layer layer(layersValue[i]);
-		cout << layer << endl;
-		layers.push_back(layer);
-	}
-
+const Layer& Map::getCollisionLayer() const {
+	return _floorLayer;
 }
 
 
