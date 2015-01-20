@@ -19,6 +19,7 @@
 #include "wss/Path.h"
 
 #include "wss/Map.h"
+#include "micropather/micropather.h"
 
 class PathTest : public ::testing::Test {
 protected:
@@ -32,15 +33,25 @@ protected:
 
 	virtual void SetUp() {
 
+		using namespace glm;
+		using namespace wss;
+		using namespace std;
 
-		for (int y = 0; y < mapHeight; ++y)
-		{
-			for (int x = 0; x < mapWidth; ++x)
-			{
-				map.push_back(1);
-			}
-		}
+		layer.width = 10;
+		layer.height = 10;
 
+		layer.data = std::vector<int32_t>({
+						  1,1,0,0,0,0,0,0,0,0,
+						  0,1,0,0,0,0,0,0,0,0,
+						  0,0,1,0,0,0,0,0,0,0,
+						  1,0,0,1,0,0,0,0,0,0,
+						  0,0,0,1,0,1,0,0,0,0,
+						  0,0,0,1,1,1,0,0,0,0,
+						  0,0,0,1,0,0,0,0,0,0,
+						  0,0,0,1,0,0,0,0,0,0,
+						  0,0,0,1,0,0,0,0,0,0,
+						  0,0,0,1,0,0,0,0,0,0
+					});
 	}
 
 	virtual void TearDown() {
@@ -57,12 +68,10 @@ protected:
 
 	std::vector<unsigned int> map;
 
-
 	size_t mapWidth = 10;
 	size_t mapHeight = 10;
 
-
-
+	wss::Layer layer;
 };
 
 TEST_F(PathTest, TestLowCost) {
@@ -72,23 +81,6 @@ TEST_F(PathTest, TestLowCost) {
 
 	xyToIndex(0, 0, stateStart, 10);
 	xyToIndex(1, 1, stateEnd, 10);
-
-	Layer layer;
-	layer.width = 10;
-	layer.height = 10;
-
-	layer.data = std::vector<int32_t>({
-				  1,1,0,0,0,0,0,0,0,0,
-				  1,1,0,0,0,0,0,0,0,0,
-				  0,0,1,0,0,0,0,0,0,0,
-				  1,0,0,1,0,0,0,0,0,0,
-				  0,0,0,1,0,0,0,0,0,0,
-				  0,0,0,1,0,0,0,0,0,0,
-				  0,0,0,1,0,0,0,0,0,0,
-				  0,0,0,1,0,0,0,0,0,0,
-				  0,0,0,1,0,0,0,0,0,0,
-				  0,0,0,1,0,0,0,0,0,0
-			});
 
 	wss::Path* path0 = new wss::Path(layer);
 
@@ -116,28 +108,9 @@ TEST_F(PathTest, TestAdjacentCost) {
 
 	using namespace glm;
 	using namespace wss;
+
 	// Assuming cells: [1, 0], [0, 1], [1, 1]
-
-
-
 	auto checkCells = [this](vec2 stateVec, std::vector<vec2> &cells){
-
-		Layer layer;
-		layer.width = 10;
-		layer.height = 10;
-
-		layer.data = std::vector<int32_t>( {
-					1,1,0,0,0,0,0,0,0,0,
-					1,1,1,0,0,0,0,0,0,0,
-					0,0,1,0,0,0,0,0,0,0,
-					1,0,0,1,0,0,0,0,0,0,
-					0,0,0,1,0,0,0,0,0,0,
-					0,0,0,1,0,0,0,0,0,0,
-					0,0,0,1,0,0,0,0,0,0,
-					0,0,0,1,0,0,0,0,0,0,
-					0,0,0,1,0,0,0,0,0,0,
-					0,0,0,1,0,0,0,0,0,0
-				});
 
 		MP_VECTOR<micropather::StateCost> adj;
 
@@ -195,6 +168,56 @@ TEST_F(PathTest, TestAdjacentCost) {
 
 }
 
+TEST_F(PathTest, Test) {
+	using namespace std;
+	using namespace wss;
+	using namespace glm;
+
+	Path path(layer);
+	micropather::MicroPather pather(&path);
+
+	size_t stateStart, stateEnd;
+
+	glm::vec2 start = glm::vec2(0, 0);
+	glm::vec2 end = glm::vec2(5, 4);
+
+	stateStart = wss::Utils::XYToIndex(start, layer.width);
+	stateEnd = wss::Utils::XYToIndex(end, layer.width);
+
+	float cost;
+	std::vector<void*> pathNodes;
+
+	pather.Solve((void*)stateStart, (void*)stateEnd, &pathNodes, &cost);
+
+//	layer.data = std::vector<int32_t>({
+//							  1,1,0,0,0,0,0,0,0,0,
+//							  0,1,0,0,0,0,0,0,0,0,
+//							  0,0,1,0,0,0,0,0,0,0,
+//							  1,0,0,1,0,0,0,0,0,0,
+//							  0,0,0,1,0,1,0,0,0,0,
+//							  0,0,0,1,0,1,0,0,0,0,
+//							  0,0,0,1,1,1,0,0,0,0,
+//							  0,0,0,1,0,0,0,0,0,0,
+//							  0,0,0,1,0,0,0,0,0,0,
+//							  0,0,0,1,0,0,0,0,0,0
+//						});
+
+	// Now check solved path is:
+	std::vector<glm::vec2> knownPath = {
+			vec2(0,0), vec2(1,1), vec2(2,2), vec2(3,3), vec2(3,4), vec2(4,5), vec2(5,4)
+	};
+
+
+	// Check results
+	ASSERT_EQ(knownPath.size(), pathNodes.size());
+
+	for (size_t i = 0; i < knownPath.size(); ++i) {
+		size_t knownIndex = Utils::XYToIndex(knownPath[i], layer.width);
+		size_t solvedIndex = (size_t)pathNodes[i];
+		ASSERT_EQ(knownIndex, solvedIndex);
+	}
+
+}
 
 
 

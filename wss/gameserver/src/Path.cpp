@@ -36,16 +36,20 @@ float Path::LeastCostEstimate(void* stateStart, void* stateEnd)
 	wss::Utils::indexToXY(startIndex, _layer.width, start);
 	wss::Utils::indexToXY(endIndex, _layer.width, end);
 
-	// For now if end is not walkble then weight it such that it's length is scaled outside of map.
+	using namespace wss;
+	using namespace glm;
+	// For now if end is not walkable then weight it such that it's length is scaled outside of map.
 
 	float scale = (data != 0) ? 1.0 : _layer.width*2.0;
 
 	float length = glm::length(start - end);
-	return glm::length(start - end)*scale;
+
+	return length*scale;
 }
 
 void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent)
 {
+	using namespace std;
 
 	size_t currentIndex = (size_t)(state);
 
@@ -76,6 +80,9 @@ void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent
 
 			stateCost.state = (void*)(cellIndex);
 			stateCost.cost = cost;
+
+			glm::vec2 position;
+			Utils::indexToXY((int)stateCost.state, _layer.width, position);
 			adjacent->push_back(stateCost);
 		}
 	}
