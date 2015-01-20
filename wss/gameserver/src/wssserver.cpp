@@ -36,6 +36,7 @@
 #include "wss/AttributeEntity.h"
 #include "wss/Advertisement.h"
 #include "wss/AdvertCommand.h"
+#include "wss/Map.h"
 
 #define within(num) (int) ((float) num * random () / (RAND_MAX + 1.0))
 
@@ -302,6 +303,9 @@ int main(int argc, char** argv) {
 	size_t i;
 	tbb::flow::graph g;
 
+	// Parse map
+	Map jsonMap("test3.json");
+	jsonMap.printCollisionLayer();
 
 
 	// SETUP ENTITIES
@@ -345,8 +349,8 @@ int main(int argc, char** argv) {
 				//glm::vec2 randCircle = glm::diskRand((float)ZONE_SIZE-1);
 				//glm::vec2 advertPosition = center + randCircle;
 				glm::vec2 advertPosition = glm::linearRand(center, center + glm::vec2(ZONE_SIZE, ZONE_SIZE));
-				cout << "Zone x,y: " << x << "," << y << endl;
-				cout << "advertPosition: " << advertPosition.x << ", " << advertPosition.y << endl;
+				//cout << "Zone x,y: " << x << "," << y << endl;
+				//cout << "advertPosition: " << advertPosition.x << ", " << advertPosition.y << endl;
 
 				//Make commands
 				std::queue<AdvertBehaviorTest> behaviors;

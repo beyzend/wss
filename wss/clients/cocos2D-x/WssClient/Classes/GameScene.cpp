@@ -139,16 +139,11 @@ bool HelloWorld::init() {
 
 void HelloWorld::update(float dt) {
 	using namespace std;
-	// Translate camera according to cat! CATPOWER!
-
-	// Transform cat
-
 	_client.updatePositions(_entities);
 
+	Vec2 catWorldPosition = Vec2(_catWorld.x, -_catWorld.y);
 
-	const Vec2 catWorldPosition = _entities[_camOnIndex]->getPosition();//Vec2();// Transform cat into "camera" origin (0,0), then place that origin at TOP of screen.
-
-	//_cat->setPosition(_centerOfScreen);
+	_cat->setPosition(_centerOfScreen);
 
 	// Transform camera based on cat
 	_camera->setPosition(-catWorldPosition - _centerOfScreen);
