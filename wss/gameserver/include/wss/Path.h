@@ -26,5 +26,7 @@ public:
 
 private:
 	const Layer& _layer;
+
+	bool _passable(size_t index);
 };
 }

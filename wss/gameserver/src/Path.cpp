@@ -72,20 +72,28 @@ void Path::AdjacentCost(void* state, MP_VECTOR<micropather::StateCost> *adjacent
 		for (size_t cx = sx; cx <= ex; ++cx) {
 			if (cx == x && cy == y) // X marks the spot
 				continue;
-			micropather::StateCost stateCost;
 
 			//float cost = glm::length((glm::vec2(x, y) - glm::vec2(cx, cy)));
 			size_t cellIndex = Utils::XYToIndex(glm::vec2(cx, cy), _layer.width);
-			float cost = LeastCostEstimate((void*)currentIndex, (void*)cellIndex);
 
-			stateCost.state = (void*)(cellIndex);
-			stateCost.cost = cost;
+			if (_passable(cellIndex)) {
+				micropather::StateCost stateCost;
 
-			glm::vec2 position;
-			Utils::indexToXY((int)stateCost.state, _layer.width, position);
-			adjacent->push_back(stateCost);
+				float cost = LeastCostEstimate((void*)currentIndex, (void*)cellIndex);
+
+				stateCost.state = (void*)(cellIndex);
+				stateCost.cost = cost;
+
+				glm::vec2 position;
+				Utils::indexToXY((int)stateCost.state, _layer.width, position);
+				adjacent->push_back(stateCost);
+			}
 		}
 	}
+}
+
+bool Path::_passable(size_t index) {
+	return (_layer.data[index] != 0);
 }
 
 void Path::PrintStateInfo(void* state)

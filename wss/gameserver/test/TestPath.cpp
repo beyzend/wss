@@ -41,9 +41,9 @@ protected:
 		layer.height = 10;
 
 		layer.data = std::vector<int32_t>({
-						  1,1,0,0,0,0,0,0,0,0,
-						  0,1,0,0,0,0,0,0,0,0,
-						  0,0,1,0,0,0,0,0,0,0,
+						  1,1,0,0,0,0,0,0,1,1,
+						  0,1,0,0,0,0,0,0,0,1,
+						  0,0,1,0,0,0,0,0,1,1,
 						  1,0,0,1,0,0,0,0,0,0,
 						  0,0,0,1,0,1,0,0,0,0,
 						  0,0,0,1,1,1,0,0,0,0,
@@ -142,25 +142,22 @@ TEST_F(PathTest, TestAdjacentCost) {
 		}
 	};
 
-
-	std::vector<vec2> cells = {vec2(1, 0), vec2(0, 1), vec2(1, 1)};
+	std::vector<vec2> cells = {vec2(1, 0), vec2(1, 1)};
 	checkCells(vec2(0, 0), cells);
 
-	cells = {vec2(0,0), vec2(1,0), vec2(2,0),
-			vec2(0,1), vec2(2,1),
-			vec2(0,2), vec2(1,2), vec2(2,2)
+	cells = {vec2(0,0), vec2(1,0),
+			 vec2(2,2)
 	};
 
 	checkCells(vec2(1, 1), cells);
 
 	cells = {vec2(mapWidth - 2, 0),
-			vec2(mapWidth - 2, 1), vec2(mapWidth - 1, 1)
+			vec2(mapWidth - 1, 1)
 	};
 
 	checkCells(vec2(mapWidth - 1, 0), cells);
 
 	cells = {vec2(mapWidth - 2, 0), vec2(mapWidth - 1, 0),
-		vec2(mapWidth - 2, 1), //state cell
 		vec2(mapWidth - 2, 2), vec2(mapWidth - 1, 2)
 	};
 
