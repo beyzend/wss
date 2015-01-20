@@ -50,6 +50,7 @@ const size_t MAP_H = 100;
 size_t ZONE_SIZE = 5;
 size_t NUM_OF_ZONES = (MAP_W) / ZONE_SIZE;
 
+size_t ENT_TO_CREATE = 10;
 
 struct Entity {
 
@@ -254,8 +255,7 @@ void regionDataPublisher(zmqpp::socket &publisher, PROCESS_ATTRIBUTE_NODE &pathF
 				//}
 			//}
 
-			for (size_t i = 0; i < 1000; ++i) {
-				auto entity = entities[lastI++ % 1000];
+			for (auto entity : entities) {
 				if (entity->pathNodes) {
 					sendOut = true;
 					message << entity->id << entity->position.x << entity->position.y;
@@ -315,8 +315,8 @@ int main(int argc, char** argv) {
 	std::vector<std::shared_ptr<AttributeEntity>> attributeEntities;
 	tbb::concurrent_queue< std::tuple<tuple<size_t, glm::vec2>, tuple<double, chrono::time_point<chrono::steady_clock, chrono::duration<double> > > > > waitQueue;
 
-	glm::vec2 start(12,1), end(72,54);
-	for (size_t i = 0; i < 1000; ++i) {
+	glm::vec2 start(18,4), end(67,8);
+	for (size_t i = 0; i < ENT_TO_CREATE; ++i) {
 		glm::vec2 position = randomPosition(start, end);
 		pathEntities.push_back(new PathEntity(i, position));
 		entities.push_back(new Entity(i, position));
@@ -409,12 +409,13 @@ int main(int argc, char** argv) {
 			case AdvertBehaviorTest::MOVE_TO:
 			{
 				//cout << "MOVE_TO COMMAND SELECTED! " << data.x << " , " << data.y << endl;
-				//data = glm::vec2(glm::linearRand(12.0f, (float)72), glm::linearRand(1.0f, (float)54));
+				//glm::vec2 start(18,4), end(67,8);
+				data = glm::vec2(glm::linearRand(18.0f, (float)67), glm::linearRand(4.0f, (float)8));
 
 				// random offset to
 				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE);
 
-				pathGenerator.try_put(make_tuple(id, position, data + randomVec * glm::linearRand(0.1f, 1.0f)));
+				pathGenerator.try_put(make_tuple(id, position, data));// + randomVec * glm::linearRand(0.1f, 1.0f)));
 				break;
 			}
 			case AdvertBehaviorTest::WAIT:
