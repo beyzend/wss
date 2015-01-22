@@ -37,6 +37,8 @@
 #include "wss/Advertisement.h"
 #include "wss/AdvertCommand.h"
 #include "wss/Map.h"
+#include "wss/AttributesTransform.h"
+
 
 #define within(num) (int) ((float) num * random () / (RAND_MAX + 1.0))
 
@@ -90,8 +92,6 @@ using PROCESS_ATTRIBUTE_NODE = tbb::flow::function_node<std::tuple<size_t, glm::
 using WAIT_NODE = tbb::flow::function_node<int>;
 using PATH_FIND_NODE = tbb::flow::function_node<std::tuple<size_t, glm::vec2, glm::vec2>, PathEntity*>;
 using PATH_SOLVE_NODE = tbb::flow::function_node<PathEntity*, PathEntity*>;
-
-
 
 glm::vec2 randomPosition(glm::vec2 start, glm::vec2 end) {
 	glm::vec2 range = end - start;
@@ -147,16 +147,17 @@ void processWaitCallbacks(PROCESS_ATTRIBUTE_NODE *nextNode, tbb::concurrent_queu
 
 	chrono::steady_clock clock;
 
-	while (1) {
+	//while (1) {
 		bool more = false;
 		if (nextNode == nullptr)
-			continue;
+			return;
 		do {
 
 			tuple<tuple<size_t, glm::vec2>, tuple<double, chrono::time_point<chrono::steady_clock, chrono::duration<double>>>> waitThing;
 			more = waitQueue.try_pop(waitThing);
 
 			if (more) {
+
 				auto idPosition = get<0>(waitThing);
 				auto timeStuff = get<1>(waitThing);
 				auto timeToWait = get<0>(timeStuff);
@@ -183,7 +184,7 @@ void processWaitCallbacks(PROCESS_ATTRIBUTE_NODE *nextNode, tbb::concurrent_queu
 			}
 		}while(more);
 		//std::this_thread::sleep()
-	}
+	//}
 
 }
 
@@ -530,12 +531,16 @@ int main(int argc, char** argv) {
 
 	tbb::flow::make_edge(pathGenerator, solvePathNode);
 
-	std::thread waitProcessThread([&]() {
+	//std::thread waitProcessThread([&]() {
+		//processWaitCallbacks(processNext, waitQueue);
+	//});
+
+	while(1) {
 		processWaitCallbacks(processNext, waitQueue);
-	});
+	}
+
 
 	g.wait_for_all();
-
 	updateRegionThread.join();
 
 }
