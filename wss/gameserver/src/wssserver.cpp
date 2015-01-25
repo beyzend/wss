@@ -313,7 +313,7 @@ int main(int argc, char** argv) {
 		entities.push_back(new Entity(i, position));
 		// create attribute entities with health and happiness
 		vector<ATTRIBUTE_VALUE> attributes = {std::make_pair(Attributes::Health, 100), std::make_pair(Attributes::Happiness, 50)};
-		attributeEntities.push_back(shared_ptr<AttributeEntity>(new AttributeEntity(i, attributes)));
+		attributeEntities.push_back(shared_ptr<AttributeEntity>(new AttributeEntity(i, attributes )));
 	}
 
 	std::vector<size_t> map;
@@ -443,7 +443,10 @@ int main(int argc, char** argv) {
 			for (auto advert_pos : adverts) {
 				auto advert = get<0>(advert_pos);
 				auto position = get<1>(advert_pos);
-				scores.push_back(make_pair(advert.get(), attributeEntity->score(*advert)));
+				//auto deltas = advert->getDeltas();
+				const vector<wss::ATTRIBUTE_VALUE> &deltas = advert->getDeltas();
+				scores.push_back(make_pair(advert.get(), 10.0f));
+				//scores.push_back(make_pair(advert.get(), attributeEntity->score(deltas)));
 			}
 			int whichOne = attributeEntity->pickAdvertisement(scores);
 			if (whichOne > -1) {

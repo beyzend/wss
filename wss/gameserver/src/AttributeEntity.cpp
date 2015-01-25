@@ -1,34 +1,63 @@
 #include "wss/wss.h"
 
 #include <algorithm>
+#include <tuple>
 
 #include "wss/AttributeEntity.h"
 #include "wss/Advertisement.h"
 #include "wss/Utils.h"
 
+using namespace std;
 using namespace wss;
 
-AttributeEntity::AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &attributes) :
-		_attributes(attributes), id(id) {
 
+
+AttributeEntity::AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &attributes, const vector<ATTRIBUTES_AND_FLOW> &flows) :
+		id(id) {
+
+	if (flows.size() == 0){
+		for (auto attribute : attributes) {
+			_attributes.push_back(AttributeTransform(attribute, AttributeFlow()));
+		}
+	}
+	else {
+		for (auto attribute : attributes) {
+			Attributes entAttr; float value;
+			tie(entAttr, value) = attribute;
+			auto found = find_if(flows.cbegin(), flows.cend(), [=](const ATTRIBUTES_AND_FLOW flow)->bool {
+				Attributes attr; AttributeFlow trans;
+				tie(attr, trans);
+				return (entAttr == attr);
+			});
+			if (found != flows.cend()) {
+				_attributes.push_back(AttributeTransform(attribute, get<1>(*found)));
+			}
+			else {
+				_attributes.push_back(AttributeTransform(attribute, AttributeFlow()));
+			}
+		}
+	}
 }
 
 AttributeEntity::~AttributeEntity() {
 
 }
 
-float AttributeEntity::score(const Advertisement &advert) {
+float AttributeEntity::score(const std::vector<wss::ATTRIBUTE_VALUE> &deltas) {
 
 	float returnScore = 0.0f;
-	for (auto advertAttributeDelta : advert.getDeltas()) {
-		Attributes advertAttribute = std::get<0>(advertAttributeDelta);
-		float delta = std::get<1>(advertAttributeDelta);
+	for (auto advertAttributeDelta : deltas) {
+		Attributes advertAttribute; float delta;
+		tie(advertAttribute, delta) = advertAttributeDelta;
+
 		// Loop thru each attribute in entity to find a match. Must assert no duplicate attributes.
 		for (auto entityAttribute : _attributes) {
-			if (std::get<0>(entityAttribute) == advertAttribute) {
+			Attributes attribute; float currentValue;
+			tie(attribute, currentValue) = entityAttribute.attrValue;
+			if (attribute == advertAttribute) {
 				// Add this score
-				std::int32_t futureValue = std::get<1>(entityAttribute) + delta;
-				returnScore += Score::ComputeScore(std::get<1>(entityAttribute), futureValue);
+				std::int32_t futureValue = currentValue + delta;
+				returnScore += Score::ComputeScore(currentValue, futureValue);
 			}
 		}
 	}

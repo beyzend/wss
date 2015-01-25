@@ -13,7 +13,7 @@ using ATTRIBUTE_DELTA = std::tuple<float,float>;
 
 class AttributeFlow {
 public:
-	explicit AttributeFlow();
+	AttributeFlow();
 	virtual ~AttributeFlow();
 
 	void addInflow(ATTRIBUTE_DELTA delta);
@@ -27,5 +27,7 @@ private:
 	std::vector<ATTRIBUTE_DELTA> _outflow;
 
 };
+
+
 
 } //end namespace wss

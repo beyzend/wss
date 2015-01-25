@@ -65,7 +65,7 @@ TEST_F(AttributeTest, TestScore) {
 
 
 			Advertisement advert(attr, command);
-			float score = oneEntity.score(advert);
+			float score = oneEntity.score(advert.getDeltas());
 
 			ASSERT_FLOAT_EQ(constScore, score);
 		}
@@ -86,8 +86,8 @@ TEST_F(AttributeTest, TestPickAdvert) {
 	Advertisement advertOne(attributesOne, command);
 	Advertisement betterOne(anotherOne, command);
 
-	float scoreOne = oneEntity.score(advertOne);
-	float betterScore = oneEntity.score(betterOne);
+	float scoreOne = oneEntity.score(advertOne.getDeltas());
+	float betterScore = oneEntity.score(betterOne.getDeltas());
 
 	std::vector<ADVERT_SCORE> scoreTuples = {std::make_tuple(&advertOne, scoreOne), std::make_tuple(&betterOne, betterScore)};
 
