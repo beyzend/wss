@@ -23,9 +23,8 @@ public:
 	//ATTRIBUTE_VALUE getCurrentValueLazy(ATTRIBUTE_VALUE value, float duration, float step);
 
 private:
-
-	std::queue<ATTRIBUTE_DELTA> _inflow;
-	std::queue<ATTRIBUTE_DELTA> _outflow;
+	std::vector<ATTRIBUTE_DELTA> _inflow;
+	std::vector<ATTRIBUTE_DELTA> _outflow;
 
 };
 

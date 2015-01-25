@@ -30,5 +30,5 @@ enable_testing()
 add_test(NAME TestPath COMMAND TestPath)
 add_test(NAME TestAttributes COMMAND TestAttributes) 
 add_test(NAME TestScoreUtils COMMAND TestScoreUtils)
-
+add_test(NAME TestAttributesTransform COMMAND TestAttributesTransform)
  

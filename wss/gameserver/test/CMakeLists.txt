@@ -14,6 +14,7 @@ include_directories("${CMAKE_SOURCE_DIR}/include/")
 add_executable(TestPath TestPath.cpp)
 add_executable(TestAttributes TestAttribute.cpp)
 add_executable(TestScoreUtils TestScoreUtils.cpp)
+add_executable(TestAttributesTransform TestAttributeTransform.cpp)
 
 target_link_libraries(TestPath
   WssServerLib
@@ -36,3 +37,9 @@ target_link_libraries(TestScoreUtils
     ${LIB_PTHREAD}
 ) 
 
+target_link_libraries(TestAttributesTransform
+    WssServerLib
+    ${LIB_GTEST}
+    ${LIB_GTEST_MAIN}
+    ${LIB_PTHREAD}
+)

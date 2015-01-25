@@ -1,9 +1,9 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Release|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="wssmono/NetClient.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="wssmono/Map.cs">
     <Files>
-      <File FileName="wssmono/Game1.cs" Line="157" Column="4" />
-      <File FileName="wssmono/Map.cs" Line="1" Column="1" />
+      <File FileName="wssmono/Game1.cs" Line="1" Column="1" />
+      <File FileName="wssmono/Map.cs" Line="34" Column="2" />
       <File FileName="wssmono/NetClient.cs" Line="26" Column="3" />
     </Files>
     <Pads>
@@ -15,7 +15,7 @@
               <Node name="data" expanded="True" />
               <Node name="graphics" expanded="True" />
             </Node>
-            <Node name="NetClient.cs" selected="True" />
+            <Node name="Map.cs" selected="True" />
           </Node>
         </State>
       </Pad>
