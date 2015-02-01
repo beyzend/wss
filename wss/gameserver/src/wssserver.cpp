@@ -297,7 +297,6 @@ int main(int argc, char** argv) {
 	// Parse map
 	Map jsonMap("test4.json");
 
-
 	// SETUP ENTITIES
 
 	// Use a memory allocator here.
@@ -325,52 +324,41 @@ int main(int argc, char** argv) {
 	}
 
 	using ADVERT_POS = std::tuple<std::shared_ptr<wss::Advertisement>, glm::vec2>;
-	using vSECTOR_ADVERTS = std::vector<ADVERT_POS>;
-	std::unordered_map<size_t, vSECTOR_ADVERTS> advertZones;
+	//using vSECTOR_ADVERTS = std::vector<ADVERT_POS>;
+	//std::unordered_map<size_t, vSECTOR_ADVERTS> advertZones;
 
-	size_t advertsPerZone = 5;
-	// Setup ADVERTISEMENTS: randomly create random advertisement within each zone.
-	for (size_t y = 0; y < NUM_OF_ZONES; ++y) {
-		for (size_t x = 0; x < NUM_OF_ZONES; ++x) {
-			glm::vec2 center(x*ZONE_SIZE, y*ZONE_SIZE);
-			std::vector<ADVERT_POS> advertPos;
-			size_t zoneIndex = wss::Utils::XYToIndex((int)x, (int)y, NUM_OF_ZONES);
-			for (size_t i = 0; i < advertsPerZone; ++i) {
-				//glm::vec2 randCircle = glm::diskRand((float)ZONE_SIZE-1);
-				//glm::vec2 advertPosition = center + randCircle;
-				glm::vec2 advertPosition = glm::linearRand(center, center + glm::vec2(ZONE_SIZE, ZONE_SIZE));
-				//cout << "Zone x,y: " << x << "," << y << endl;
-				//cout << "advertPosition: " << advertPosition.x << ", " << advertPosition.y << endl;
+	using vADVERTS = vector<ADVERT_POS>;
+	vADVERTS adverts;
+	// Create advertisements
+	// We will load json Advertisement layer and create FOOD and WORK type advertisements.
+	// For now WORK advertisement will scale happiness reward by distance from Y = 0
+	// For now just testing code. Will need to model all this!
+	for (auto object : jsonMap.getAdvertLayer().objects) {
+		if ("food" == object.type) {
+			vector<ATTRIBUTE_VALUE> awards = {
+					std::make_pair(Attributes::Health, 20.0f)
+			};
 
-				//Make commands
-				std::queue<AdvertBehaviorTest> behaviors;
-				behaviors.push(AdvertBehaviorTest::WAIT);
-				behaviors.push(AdvertBehaviorTest::MOVE_TO);
-				behaviors.push(AdvertBehaviorTest::WAIT);
+			AdvertCommand healthCommands("health", queue<AdvertBehaviorTest>({AdvertBehaviorTest::WAIT}),
+					queue<glm::vec2>({glm::vec2(1.0f, 5.0f)})); // Should randomly wait when executing this command and not use wait time here.
 
-				std::queue<glm::vec2> data;
+			shared_ptr<Advertisement> foodAdvert = shared_ptr<Advertisement>(new Advertisement(awards, healthCommands));
+			glm::vec2 position(object.x / 16.0f, object.y / 16.0f);
+			adverts.push_back(tie(foodAdvert, position));
+		}
+		else if("work" == object.type) {
+			Attributes attr = Attributes::Happiness;
+			glm::vec2 pos(object.x / 16.0f, object.y / 16.0f);
+			float scale = pos.y / jsonMap.getCollisionLayer().height;
+			vector<ATTRIBUTE_VALUE> awards = {
+					make_pair(attr, 10 + scale * 10)
+			};
+			AdvertCommand workCommands("work",
+					queue<AdvertBehaviorTest>({AdvertBehaviorTest::WAIT}),
+					queue<glm::vec2>({glm::vec2(1.0f, 5.0f)}));
 
-				glm::vec2 randomZone(glm::linearRand(0.0f, (float)NUM_OF_ZONES), glm::linearRand(0.0f, (float)NUM_OF_ZONES));
-
-				while((int)randomZone.x == x && (int)randomZone.y == y) {
-					randomZone = glm::vec2(glm::linearRand(0.0f, (float)NUM_OF_ZONES), glm::linearRand(0.0f, (float)NUM_OF_ZONES));
-				}
-
-				randomZone *= ZONE_SIZE;
-
-				data.push(glm::vec2(glm::linearRand(1.0f, 6.0f), 0.0f));
-				data.push(randomZone);
-				data.push(glm::vec2(glm::linearRand(1.0f, 6.0f), 0.0f));
-
-				wss::AdvertCommand command("testcommand", behaviors, data);
-
-				std::vector<wss::ATTRIBUTE_VALUE> deltas = { std::make_pair(wss::Attributes::Health, within(20)), std::make_pair(wss::Attributes::Happiness,
-						within(15)), std::make_pair(wss::Attributes::Health, -5 - within(5)) };
-				std::shared_ptr<Advertisement> advert(new Advertisement(deltas, command));
-
-				advertPos.push_back(std::make_tuple(advert, advertPosition));
-			}
-			advertZones[zoneIndex] = advertPos;
+			shared_ptr<Advertisement> workAdvert = shared_ptr<Advertisement>(new Advertisement(awards, workCommands));
+			adverts.push_back(tie(workAdvert, pos));
 		}
 	}
 
@@ -399,20 +387,10 @@ int main(int argc, char** argv) {
 			switch(behavior) {
 			case AdvertBehaviorTest::MOVE_TO:
 			{
-				//cout << "MOVE_TO COMMAND SELECTED! " << data.x << " , " << data.y << endl;
-				//glm::vec2 start(18,4), end(67,8);
 				const Layer& layer = jsonMap.getAdvertLayer();
 				size_t randomIdx = within(layer.objects.size());
-				//cout << "layer.object.size: " << layer.objects.size() << endl;
-				//cout << "randomIdx: " << randomIdx << endl;
 				const LayerObject& object = layer.objects[randomIdx];
 				data = vec2((int)(object.x / 16.0f), (int)(object.y / 16.0));
-
-				//cout << "data: " << data.x << " , " << data.y << endl;
-
-				//data = glm::vec2(glm::linearRand(18.0f, (float)67), glm::linearRand(4.0f, (float)8));
-				// Pick a random object
-
 
 				// random offset to
 				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE);
@@ -436,41 +414,9 @@ int main(int argc, char** argv) {
 
 		if (behavior == AdvertBehaviorTest::NONE) { // No commands. Pick new advertisement.
 
-			size_t zoneId = Utils::XYToIndex(position.x / ZONE_SIZE, position.y / ZONE_SIZE, NUM_OF_ZONES);
-			auto adverts = advertZones[zoneId];
+			AdvertBehaviorTest moveTo = AdvertBehaviorTest::MOVE_TO;
+			processCommand(moveTo, data);
 
-			vector<ADVERT_SCORE> scores;
-			for (auto advert_pos : adverts) {
-				auto advert = get<0>(advert_pos);
-				auto position = get<1>(advert_pos);
-				//auto deltas = advert->getDeltas();
-				const vector<wss::ATTRIBUTE_VALUE> &deltas = advert->getDeltas();
-				scores.push_back(make_pair(advert.get(), 10.0f));
-				//scores.push_back(make_pair(advert.get(), attributeEntity->score(deltas)));
-			}
-			int whichOne = attributeEntity->pickAdvertisement(scores);
-			if (whichOne > -1) {
-				auto pickedAdvert = get<0>(scores[whichOne]);
-				glm::vec2 advertPosition;
-				// Stupid... Find position for this advert
-				for (auto advert_pos : adverts) {
-					auto advert = get<0>(advert_pos);
-					if (advert.get() == pickedAdvert)
-						advertPosition = get<1>(advert_pos);
-				}
-
-				// Get behaviors
-				AdvertCommand command = pickedAdvert->getCommand();
-				// Walk to the selected advertisement
-				AdvertBehaviorTest moveTo = AdvertBehaviorTest::MOVE_TO;
-				processCommand(moveTo, advertPosition);
-				//AdvertBehaviorTest behavior = command.getB
-
-				attributeEntity->setCommands(command); //Current test implementation is copy based so need to reattach command after operation.
-			}
-			else {
-				cout << "NO SCORE!" << endl;
-			}
 		}
 		else { // There are still commands. Process next command.
 			//AdvertCommand command = attributeEntity->getCommand();

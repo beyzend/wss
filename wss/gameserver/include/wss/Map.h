@@ -28,14 +28,19 @@ struct LayerObject
 	string name = "";
 	int32_t x = 0;
 	int32_t y = 0;
+	string type = "";
 
-	explicit LayerObject(){}
+	LayerObject(){}
 
 	LayerObject(const rapidjson::Value& objectJSON) {
 		gid = objectJSON["gid"].GetInt();
 		name = objectJSON["name"].GetString();
 		x = objectJSON["x"].GetInt();
 		y = objectJSON["y"].GetInt();
+		if (!objectJSON.HasMember("type")) {
+			throw "objectJSON does not have member type!";
+		}
+		type = objectJSON["type"].GetString();
 	}
 };
 
@@ -52,7 +57,7 @@ struct Layer
 	int32_t x = 0;
 	int32_t y = 0;
 
-	explicit Layer(){}
+	Layer(){}
 
 	Layer(const rapidjson::Value& layerJSON) {
 		if (layerJSON.HasMember("data")) {

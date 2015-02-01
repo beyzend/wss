@@ -12,7 +12,7 @@
  <tileset firstgid="2096" name="wand" tilewidth="16" tileheight="16">
   <image source="../Items/Wand.png" width="128" height="112"/>
  </tileset>
- <layer name="pit" width="100" height="100" visible="0">
+ <layer name="pit" width="100" height="100">
   <data>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -20020,7 +20020,7 @@
    <tile gid="0"/>
   </data>
  </layer>
- <layer name="wall" width="100" height="100" visible="0">
+ <layer name="wall" width="100" height="100">
   <data>
    <tile gid="0"/>
    <tile gid="0"/>
@@ -30025,31 +30025,25 @@
   </data>
  </layer>
  <objectgroup name="advertisements">
-  <object gid="2122" x="389" y="805"/>
-  <object gid="2122" x="449" y="803"/>
-  <object gid="2122" x="384" y="864"/>
-  <object gid="2122" x="420" y="865"/>
-  <object gid="2122" x="456" y="871"/>
-  <object gid="2122" x="552" y="867"/>
-  <object gid="2122" x="577" y="519"/>
-  <object gid="2122" x="623" y="463"/>
-  <object gid="2122" x="718" y="503"/>
-  <object gid="2122" x="885" y="519"/>
-  <object gid="2122" x="919" y="800"/>
-  <object gid="2122" x="921" y="862"/>
-  <object gid="2122" x="831" y="665"/>
-  <object gid="2122" x="834" y="515"/>
-  <object gid="2122" x="405" y="443"/>
-  <object gid="2122" x="352" y="99"/>
-  <object gid="2122" x="458" y="105"/>
-  <object gid="2122" x="592" y="115"/>
-  <object gid="2122" x="739" y="108"/>
-  <object gid="2122" x="898" y="101"/>
-  <object gid="2122" x="1014" y="127"/>
-  <object gid="2122" x="929" y="449"/>
-  <object gid="2122" x="736" y="874"/>
-  <object gid="2122" x="669" y="870"/>
-  <object gid="2122" x="670" y="784"/>
-  <object gid="2122" x="857" y="798"/>
+  <object type="food" gid="2129" x="346" y="112"/>
+  <object type="food" gid="2129" x="475" y="106"/>
+  <object type="food" gid="2129" x="627" y="109"/>
+  <object type="food" gid="2129" x="769" y="113"/>
+  <object type="food" gid="2129" x="909" y="113"/>
+  <object type="food" gid="2129" x="1021" y="116"/>
+  <object type="work" gid="2098" x="395" y="449"/>
+  <object type="work" gid="2098" x="472" y="444"/>
+  <object type="work" gid="2098" x="568" y="521"/>
+  <object type="work" gid="2098" x="638" y="522"/>
+  <object type="work" gid="2098" x="721" y="518"/>
+  <object type="work" gid="2098" x="773" y="520"/>
+  <object type="work" gid="2098" x="391" y="797"/>
+  <object type="work" gid="2098" x="464" y="797"/>
+  <object type="work" gid="2098" x="574" y="870"/>
+  <object type="work" gid="2098" x="643" y="868"/>
+  <object type="work" gid="2098" x="728" y="870"/>
+  <object type="work" gid="2098" x="795" y="868"/>
+  <object type="work" gid="2098" x="891" y="800"/>
+  <object type="work" gid="2098" x="953" y="805"/>
  </objectgroup>
 </map>
