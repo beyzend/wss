@@ -41,8 +41,11 @@ protected:
 TEST_F(AttributeTransformTest, TestFlows) {
 	Attributes healthAttr = Attributes::Health;
 	AttributeFlow healthFlow;
-	healthFlow.addInflow(make_tuple(10.0f, 1.0f)); //100.0f health increase at 10.0 health per second.
-	healthFlow.addOutflow(make_tuple(5.0f, 1.0f));
+
+
+
+	healthFlow.addInflow(shared_ptr<AttributeTransform>(new LinearTransform(10.0f, 1.0f, FlowType::FINITE))); //100.0f health increase at 10.0 health per second.
+	healthFlow.addOutflow(shared_ptr<AttributeTransform>(new LinearTransform(5.0f, 1.0f, FlowType::FINITE)));
 
 	ATTRIBUTE_VALUE health = make_pair(healthAttr, 0.0f);
 

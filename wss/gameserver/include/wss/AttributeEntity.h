@@ -15,10 +15,10 @@ class Advertisement;
 using ADVERT_SCORE = std::tuple<const Advertisement*, float>;
 using ATTRIBUTES_AND_FLOW = std::tuple<wss::Attributes, wss::AttributeFlow>;
 
-struct AttributeTransform {
+struct AttributeUpdate {
 	ATTRIBUTE_VALUE attrValue;
 	std::shared_ptr<wss::AttributeFlow> transform;
-	AttributeTransform(const ATTRIBUTE_VALUE &attrValue, const AttributeFlow &transform) : attrValue(attrValue), transform(new AttributeFlow(transform)) {
+	AttributeUpdate(const ATTRIBUTE_VALUE &attrValue, const AttributeFlow &transform) : attrValue(attrValue), transform(new AttributeFlow(transform)) {
 	}
 };
 
@@ -41,7 +41,7 @@ public:
 
 protected:
 private:
-	std::vector<AttributeTransform> _attributes;
+	std::vector<AttributeUpdate> _attributes;
 	AdvertCommand _command;
 };
 }

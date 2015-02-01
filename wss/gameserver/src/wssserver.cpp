@@ -469,7 +469,7 @@ int main(int argc, char** argv) {
 				attributeEntity->setCommands(command); //Current test implementation is copy based so need to reattach command after operation.
 			}
 			else {
-				cout << "NO SCORE GIRL!" << endl;
+				cout << "NO SCORE!" << endl;
 			}
 		}
 		else { // There are still commands. Process next command.

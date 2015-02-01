@@ -17,7 +17,7 @@ AttributeEntity::AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &
 
 	if (flows.size() == 0){
 		for (auto attribute : attributes) {
-			_attributes.push_back(AttributeTransform(attribute, AttributeFlow()));
+			_attributes.push_back(AttributeUpdate(attribute, AttributeFlow()));
 		}
 	}
 	else {
@@ -30,10 +30,10 @@ AttributeEntity::AttributeEntity(size_t id, const std::vector<ATTRIBUTE_VALUE> &
 				return (entAttr == attr);
 			});
 			if (found != flows.cend()) {
-				_attributes.push_back(AttributeTransform(attribute, get<1>(*found)));
+				_attributes.push_back(AttributeUpdate(attribute, get<1>(*found)));
 			}
 			else {
-				_attributes.push_back(AttributeTransform(attribute, AttributeFlow()));
+				_attributes.push_back(AttributeUpdate(attribute, AttributeFlow()));
 			}
 		}
 	}
