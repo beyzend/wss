@@ -26,6 +26,10 @@ bool LinearTransform::expired() {
 	return false;
 }
 
+AttributeTransform* LinearTransform::clone() const {
+	return new LinearTransform(*this);
+}
+
 AttributeFlow::AttributeFlow() {
 
 }
@@ -34,12 +38,12 @@ AttributeFlow::~AttributeFlow() {
 
 }
 
-void AttributeFlow::addInflow(shared_ptr<AttributeTransform> transform) {
-	_inflow.push_back(transform);
+void AttributeFlow::addInflow(const AttributeTransform& transform) {
+	_inflow.push_back(shared_ptr<AttributeTransform>(transform.clone()));
 }
 
-void AttributeFlow::addOutflow(shared_ptr<AttributeTransform> transform) {
-	_outflow.push_back(transform);
+void AttributeFlow::addOutflow(const AttributeTransform& transform) {
+	_outflow.push_back(shared_ptr<AttributeTransform>(transform.clone()));
 }
 
 ATTRIBUTE_VALUE AttributeFlow::getCurrentValue(ATTRIBUTE_VALUE value, float dt) {

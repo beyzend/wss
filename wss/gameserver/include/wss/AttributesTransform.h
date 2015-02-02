@@ -16,6 +16,7 @@ public:
 
 	virtual float getCurrentValue(float dt) = 0;
 	virtual bool expired() = 0;
+	virtual AttributeTransform* clone() const = 0;
 protected:
 	AttributeTransform(){}
 private:
@@ -37,6 +38,9 @@ public:
 	float getAmount() const { return _amount; }
 	FlowType getType() const { return _type; }
 
+	virtual AttributeTransform* clone() const;
+
+
 private:
 	float _perUnit, _amount;
 	FlowType _type;
@@ -47,8 +51,8 @@ public:
 	AttributeFlow();
 	virtual ~AttributeFlow();
 
-	void addInflow(std::shared_ptr<AttributeTransform> transform);
-	void addOutflow(std::shared_ptr<AttributeTransform> transform);
+	void addInflow(const AttributeTransform& transform);
+	void addOutflow(const AttributeTransform& transform);
 
 	ATTRIBUTE_VALUE getCurrentValue(ATTRIBUTE_VALUE value, float dt);
 	//ATTRIBUTE_VALUE getCurrentValueLazy(ATTRIBUTE_VALUE value, float duration, float step);

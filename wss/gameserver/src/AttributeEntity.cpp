@@ -106,3 +106,15 @@ void AttributeEntity::getCurrentAttributes(vector<ATTRIBUTE_VALUE> &values) {
 	}
 }
 
+shared_ptr<AttributeFlow> AttributeEntity::getFlow(Attributes attr) {
+	shared_ptr<AttributeFlow> flow(nullptr);
+	for (auto& attrUpdate : _attributes) {
+		Attributes thisAttr; float value;
+		tie(thisAttr, value) = attrUpdate.attrValue;
+		if (thisAttr == attr) {
+			return attrUpdate.transform;
+		}
+	}
+	return flow;
+}
+

@@ -44,8 +44,8 @@ TEST_F(AttributeTransformTest, TestFlows) {
 
 
 
-	healthFlow.addInflow(shared_ptr<AttributeTransform>(new LinearTransform(10.0f, 1.0f, FlowType::FINITE))); //100.0f health increase at 10.0 health per second.
-	healthFlow.addOutflow(shared_ptr<AttributeTransform>(new LinearTransform(5.0f, 1.0f, FlowType::FINITE)));
+	healthFlow.addInflow(LinearTransform(10.0f, 1.0f, FlowType::FINITE)); //100.0f health increase at 10.0 health per second.
+	healthFlow.addOutflow(LinearTransform(5.0f, 1.0f, FlowType::FINITE));
 
 	ATTRIBUTE_VALUE health = make_pair(healthAttr, 0.0f);
 

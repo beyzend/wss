@@ -343,10 +343,10 @@ int main(int argc, char** argv) {
 
 			AdvertCommand healthCommands("health",
 					queue<AdvertBehaviorTest>(
-							{AdvertBehaviorTest::MOVE_TO, AdvertBehaviorTest::WAIT}
+							{AdvertBehaviorTest::MOVE_TO, AdvertBehaviorTest::WAIT, AdvertBehaviorTest::AWARD_ATTRIBUTE}
 			),
 					queue<glm::vec2>(
-							{advertPosition, glm::vec2(1.0f, 5.0f)}
+							{advertPosition, glm::vec2(1.0f, 5.0f), glm::vec2((float)Attributes::Health, 0.0f)}
 			)); // Should randomly wait when executing this command and not use wait time here.
 
 			shared_ptr<Advertisement> foodAdvert = shared_ptr<Advertisement>(new Advertisement(awards, healthCommands));
@@ -360,10 +360,10 @@ int main(int argc, char** argv) {
 			};
 			AdvertCommand workCommands("work",
 					queue<AdvertBehaviorTest>(
-							{AdvertBehaviorTest::MOVE_TO, AdvertBehaviorTest::WAIT}
+							{AdvertBehaviorTest::MOVE_TO, AdvertBehaviorTest::WAIT, AdvertBehaviorTest::AWARD_ATTRIBUTE}
 			),
 					queue<glm::vec2>(
-							{advertPosition, glm::vec2(1.0f, 5.0f)}
+							{advertPosition, glm::vec2(1.0f, 5.0f), glm::vec2((float)Attributes::Happiness, 0.0f)}
 			));
 
 			shared_ptr<Advertisement> workAdvert = shared_ptr<Advertisement>(new Advertisement(awards, workCommands));
@@ -392,20 +392,12 @@ int main(int argc, char** argv) {
 		AdvertBehaviorTest behavior = command.getBehaviorTree();
 		glm::vec2 data = command.popData();
 
-		auto processCommand = [&id, &position, &pathGenerator, &waitQueue, &jsonMap](AdvertBehaviorTest behavior, glm::vec2 data) {
+		auto processCommand = [&id, &position, &attributeEntity, &pathGenerator, &waitQueue, &jsonMap](AdvertBehaviorTest behavior, glm::vec2 data) {
 			PROCESS_ATTRIBUTE_NODE* processNext = getProcessNext();
 			switch(behavior) {
 			case AdvertBehaviorTest::MOVE_TO:
 			{
-				/*const Layer& layer = jsonMap.getAdvertLayer();
-				size_t randomIdx = within(layer.objects.size());
-				const LayerObject& object = layer.objects[randomIdx];
-				data = vec2((int)(object.x / 16.0f), (int)(object.y / 16.0));
-
-				// random offset to
-				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE);*/
-
-				pathGenerator.try_put(make_tuple(id, position, data));// + randomVec * glm::linearRand(0.1f, 1.0f)));
+				pathGenerator.try_put(make_tuple(id, position, data));
 				break;
 			}
 			case AdvertBehaviorTest::WAIT:
@@ -413,6 +405,16 @@ int main(int argc, char** argv) {
 				double randomWaitTime = data.x + glm::linearRand(0.0f, 6.0f);
 				// Do nothing for WAIT. Future use WAIT generator to generate wait.
 				waitQueue.push(make_pair(make_pair(id, position), make_pair(randomWaitTime, chrono::time_point<chrono::steady_clock, chrono::duration<double> >::min())));
+				break;
+			}
+			case AdvertBehaviorTest::AWARD_ATTRIBUTE:
+			{
+				Attributes attr = (Attributes)((int)(data.x));
+				shared_ptr<AttributeFlow> flow = attributeEntity->getFlow(attr);
+				// For now just assume all awards are finite and is awarded in 1 second.
+				if (flow.get() != nullptr) {
+					flow->addInflow( wss::LinearTransform(data.y, data.y, FlowType::FINITE));
+				}
 				break;
 			}
 			case AdvertBehaviorTest::NONE:

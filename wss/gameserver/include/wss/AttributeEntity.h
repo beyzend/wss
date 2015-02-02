@@ -42,6 +42,7 @@ public:
 	size_t id;
 
 	void getCurrentAttributes(std::vector<ATTRIBUTE_VALUE> &values);
+	std::shared_ptr<wss::AttributeFlow> getFlow(Attributes attr);
 
 protected:
 private:

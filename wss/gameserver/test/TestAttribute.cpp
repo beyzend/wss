@@ -118,8 +118,8 @@ TEST_F(AttributeTest, TestIntegrateAttributeFlow) {
 	}
 
 	AttributeFlow healthFlow;
-	healthFlow.addInflow(shared_ptr<AttributeTransform>(new LinearTransform(10.0, 1.0, FlowType::FINITE)));
-	healthFlow.addOutflow(shared_ptr<AttributeTransform>(new LinearTransform(5.0, 1.0, FlowType::FINITE)));
+	healthFlow.addInflow(LinearTransform(10.0, 1.0, FlowType::FINITE));
+	healthFlow.addOutflow(LinearTransform(5.0, 1.0, FlowType::FINITE));
 
 	AttributeEntity anotherEntity(0, testAttributes, vector<ATTRIBUTES_AND_FLOW>({make_pair(Attributes::Health, healthFlow)}));
 

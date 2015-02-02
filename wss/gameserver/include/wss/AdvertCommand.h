@@ -4,7 +4,7 @@
 
 namespace wss {
 enum class AdvertBehaviorTest {
-	NONE, MOVE_TO, WAIT
+	NONE, MOVE_TO, WAIT, AWARD_ATTRIBUTE
 };
 
 /// Temporary test implementation for Advertisement Command: a class for deferred command with associated behavior tree.
