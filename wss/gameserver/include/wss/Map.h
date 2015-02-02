@@ -32,7 +32,7 @@ struct LayerObject
 
 	LayerObject(){}
 
-	LayerObject(const rapidjson::Value& objectJSON) {
+	explicit LayerObject(const rapidjson::Value& objectJSON) {
 		gid = objectJSON["gid"].GetInt();
 		name = objectJSON["name"].GetString();
 		x = objectJSON["x"].GetInt();
@@ -59,7 +59,7 @@ struct Layer
 
 	Layer(){}
 
-	Layer(const rapidjson::Value& layerJSON) {
+	explicit Layer(const rapidjson::Value& layerJSON) {
 		if (layerJSON.HasMember("data")) {
 			const rapidjson::Value& dataJSON = layerJSON["data"];
 			for (rapidjson::SizeType i = 0; i < dataJSON.Size(); ++i) {
@@ -125,7 +125,7 @@ struct TiledMap
 
 class Map {
 public:
-	Map(const std::string &fileName);
+	explicit Map(const std::string &fileName);
 	virtual ~Map();
 
 	const Layer& getCollisionLayer() const;

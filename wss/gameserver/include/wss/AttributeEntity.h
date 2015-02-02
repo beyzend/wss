@@ -34,10 +34,14 @@ public:
 	float score(const std::vector<wss::ATTRIBUTE_VALUE> &deltas);
 	int pickAdvertisement(std::vector<ADVERT_SCORE> &scores);
 
+	void update(float dt);
+
 	AdvertCommand getCommand();
 	void setCommands(const AdvertCommand &command);
 
 	size_t id;
+
+	void getCurrentAttributes(std::vector<ATTRIBUTE_VALUE> &values);
 
 protected:
 private:

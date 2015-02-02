@@ -334,31 +334,40 @@ int main(int argc, char** argv) {
 	// For now WORK advertisement will scale happiness reward by distance from Y = 0
 	// For now just testing code. Will need to model all this!
 	for (auto object : jsonMap.getAdvertLayer().objects) {
+
+		vec2 advertPosition(object.x / 16.0f, object.y / 16.0f);
 		if ("food" == object.type) {
 			vector<ATTRIBUTE_VALUE> awards = {
 					std::make_pair(Attributes::Health, 20.0f)
 			};
 
-			AdvertCommand healthCommands("health", queue<AdvertBehaviorTest>({AdvertBehaviorTest::WAIT}),
-					queue<glm::vec2>({glm::vec2(1.0f, 5.0f)})); // Should randomly wait when executing this command and not use wait time here.
+			AdvertCommand healthCommands("health",
+					queue<AdvertBehaviorTest>(
+							{AdvertBehaviorTest::MOVE_TO, AdvertBehaviorTest::WAIT}
+			),
+					queue<glm::vec2>(
+							{advertPosition, glm::vec2(1.0f, 5.0f)}
+			)); // Should randomly wait when executing this command and not use wait time here.
 
 			shared_ptr<Advertisement> foodAdvert = shared_ptr<Advertisement>(new Advertisement(awards, healthCommands));
-			glm::vec2 position(object.x / 16.0f, object.y / 16.0f);
-			adverts.push_back(tie(foodAdvert, position));
+			adverts.push_back(tie(foodAdvert, advertPosition));
 		}
 		else if("work" == object.type) {
 			Attributes attr = Attributes::Happiness;
-			glm::vec2 pos(object.x / 16.0f, object.y / 16.0f);
-			float scale = pos.y / jsonMap.getCollisionLayer().height;
+			float scale = advertPosition.y / jsonMap.getCollisionLayer().height;
 			vector<ATTRIBUTE_VALUE> awards = {
 					make_pair(attr, 10 + scale * 10)
 			};
 			AdvertCommand workCommands("work",
-					queue<AdvertBehaviorTest>({AdvertBehaviorTest::WAIT}),
-					queue<glm::vec2>({glm::vec2(1.0f, 5.0f)}));
+					queue<AdvertBehaviorTest>(
+							{AdvertBehaviorTest::MOVE_TO, AdvertBehaviorTest::WAIT}
+			),
+					queue<glm::vec2>(
+							{advertPosition, glm::vec2(1.0f, 5.0f)}
+			));
 
 			shared_ptr<Advertisement> workAdvert = shared_ptr<Advertisement>(new Advertisement(awards, workCommands));
-			adverts.push_back(tie(workAdvert, pos));
+			adverts.push_back(tie(workAdvert, advertPosition));
 		}
 	}
 
@@ -374,9 +383,10 @@ int main(int argc, char** argv) {
 	chrono::steady_clock clock;
 	// Traverse done node. This node will take input and process an entity for the TRAVERSE_DONE_STATE--it will find nearest advertisement.
 	PROCESS_ATTRIBUTE_NODE traverseDone(g, tbb::flow::unlimited, [&](std::tuple<size_t, glm::vec2> somethingDoneEvent)->void {
-		size_t id = get<0>(somethingDoneEvent);
+		size_t id; vec2 position;
+		tie(id, position) = somethingDoneEvent;
+
 		auto attributeEntity = attributeEntities[id];
-		vec2 position = get<1>(somethingDoneEvent);
 
 		AdvertCommand command = attributeEntity->getCommand();
 		AdvertBehaviorTest behavior = command.getBehaviorTree();
@@ -387,13 +397,13 @@ int main(int argc, char** argv) {
 			switch(behavior) {
 			case AdvertBehaviorTest::MOVE_TO:
 			{
-				const Layer& layer = jsonMap.getAdvertLayer();
+				/*const Layer& layer = jsonMap.getAdvertLayer();
 				size_t randomIdx = within(layer.objects.size());
 				const LayerObject& object = layer.objects[randomIdx];
 				data = vec2((int)(object.x / 16.0f), (int)(object.y / 16.0));
 
 				// random offset to
-				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE);
+				glm::vec2 randomVec = glm::circularRand(ZONE_SIZE);*/
 
 				pathGenerator.try_put(make_tuple(id, position, data));// + randomVec * glm::linearRand(0.1f, 1.0f)));
 				break;
@@ -406,16 +416,32 @@ int main(int argc, char** argv) {
 				break;
 			}
 			case AdvertBehaviorTest::NONE:
-				//if (processNext)
-					//processNext->try_put(make_pair(id, position));
 			break;
 			}
 		};
 
 		if (behavior == AdvertBehaviorTest::NONE) { // No commands. Pick new advertisement.
 
-			AdvertBehaviorTest moveTo = AdvertBehaviorTest::MOVE_TO;
-			processCommand(moveTo, data);
+			vector<ADVERT_SCORE> scoreTuples;
+			vector<vec2> advertPositions;
+			// Pick an advertisement
+			for (auto advertAndPos : adverts) {
+				shared_ptr<Advertisement> advert;
+				vec2 position;
+				tie(advert, position) = advertAndPos;
+				float score = attributeEntity->score(advert->getDeltas());
+				const Advertisement* advertPtr = advert.get();
+				scoreTuples.push_back(tie(advertPtr, score));
+			}
+			size_t index = attributeEntity->pickAdvertisement(scoreTuples);
+			const Advertisement* advertPtr = get<0>(scoreTuples[index]);
+
+			AdvertCommand commands = advertPtr->getCommand();
+			AdvertBehaviorTest behavior = commands.getBehaviorTree();
+			vec2 data = commands.popData();
+			attributeEntity->setCommands(commands);
+
+			processCommand(behavior, data);
 
 		}
 		else { // There are still commands. Process next command.
@@ -426,7 +452,7 @@ int main(int argc, char** argv) {
 				processCommand(behavior, data);
 			}
 			else {
-				cout << "logical error... no behavior in advertisement!" << endl;
+				throw "logical error... no behavior in advertisement!";
 			}
 			//cout << "Processed commands!" << endl;
 			attributeEntity->setCommands(command);

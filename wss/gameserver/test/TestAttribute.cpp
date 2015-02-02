@@ -11,6 +11,8 @@
 #include "wss/AttributeEntity.h"
 #include "wss/Advertisement.h"
 
+#include "wss/AttributesTransform.h"
+
 using namespace wss;
 using namespace std;
 
@@ -95,6 +97,47 @@ TEST_F(AttributeTest, TestPickAdvert) {
 
 	ASSERT_EQ(0, index);
 
+}
+
+TEST_F(AttributeTest, TestIntegrateAttributeFlow) {
+	// Test default parameter for ATTRIBUTES_AND_FLOW
+	vector<ATTRIBUTE_VALUE> testAttributes = {make_pair(Attributes::Health, 10.0f)};
+	AttributeEntity oneEntity(0, testAttributes);
+	// Pump several times and current value should remain same.
+	vector<ATTRIBUTE_VALUE> values;
+	for (size_t i = 0; i < 10; ++i) {
+		//oneEntity.update(0.16);
+	}
+	oneEntity.getCurrentAttributes(values);
+
+	for (auto value : values) {
+		Attributes attr; float curValue;
+		tie(attr, curValue) = value;
+		ASSERT_EQ(Attributes::Health, attr);
+		ASSERT_EQ(10.0f, curValue);
+	}
+
+	AttributeFlow healthFlow;
+	healthFlow.addInflow(shared_ptr<AttributeTransform>(new LinearTransform(10.0, 1.0, FlowType::FINITE)));
+	healthFlow.addOutflow(shared_ptr<AttributeTransform>(new LinearTransform(5.0, 1.0, FlowType::FINITE)));
+
+	AttributeEntity anotherEntity(0, testAttributes, vector<ATTRIBUTES_AND_FLOW>({make_pair(Attributes::Health, healthFlow)}));
+
+	values.clear();
+
+	float after10Seconds = 15.0f;
+
+	for (size_t i =0; i < 10; ++i) {
+		anotherEntity.update(1.0f);
+	}
+	anotherEntity.getCurrentAttributes(values);
+
+	for (auto value : values) {
+		Attributes attr; float curValue;
+		tie(attr, curValue) = value;
+		ASSERT_EQ(Attributes::Health, attr);
+		ASSERT_NEAR(after10Seconds, curValue, 0.0001f);
+	}
 }
 
 int main(int argc, char **argv) {

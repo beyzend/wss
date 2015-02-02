@@ -91,3 +91,18 @@ AdvertCommand AttributeEntity::getCommand() {
 void AttributeEntity::setCommands(const AdvertCommand& command) {
 	_command = command;
 }
+
+void AttributeEntity::update(float dt) {
+	for (AttributeUpdate& attrUpdate : _attributes) {
+		ATTRIBUTE_VALUE currentValue = attrUpdate.attrValue;
+		currentValue = attrUpdate.transform->getCurrentValue(currentValue, dt);
+		attrUpdate.attrValue = currentValue;
+	}
+}
+
+void AttributeEntity::getCurrentAttributes(vector<ATTRIBUTE_VALUE> &values) {
+	for (auto attrUpdate : _attributes) {
+		values.push_back(attrUpdate.attrValue);
+	}
+}
+
