@@ -68,7 +68,9 @@ ATTRIBUTE_VALUE AttributeFlow::getCurrentValue(ATTRIBUTE_VALUE value, float dt) 
 	auto totalInflow = getTotal(_inflow);
 	auto totalOutflow = getTotal(_outflow);
 
+	//cout << "totalOutflow: " << totalOutflow << endl;
 	std::tie(attribute, currentVal) = value;
+	//cout << "attribute: " << attribute << " value: " << currentVal << endl;
 
 	currentVal += totalInflow;
 	currentVal -= totalOutflow;

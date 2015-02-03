@@ -140,6 +140,28 @@ void serializeEntities(rapidjson::Document &root, size_t start, size_t end, tbb:
 
 }
 
+void updateAttributeEntity(double dt, std::vector<std::shared_ptr<wss::AttributeEntity>>& attributeEntities) {
+	using namespace std;
+	using namespace wss;
+	static size_t countEnt;
+	for (auto& attributeEntity : attributeEntities) {
+		attributeEntity->update(dt);
+
+		if (countEnt++ % 200 == 0) {
+			vector<ATTRIBUTE_VALUE> values;
+			attributeEntity->getCurrentAttributes(values);
+			cout << "dt: " << dt << endl;
+			cout << "entity id: " <<  attributeEntity->id << endl;
+			for (auto& value : values) {
+				Attributes attr; float attrValue;
+				tie(attr, attrValue) = value;
+
+				cout << attr << " value: " << attrValue << endl;
+			}
+		}
+	}
+}
+
 void processWaitCallbacks(PROCESS_ATTRIBUTE_NODE *nextNode, tbb::concurrent_queue<std::tuple<std::tuple<size_t, glm::vec2>,
 		std::tuple<double, std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double>>>>> &waitQueue) {
 	using namespace std;
@@ -311,8 +333,24 @@ int main(int argc, char** argv) {
 		pathEntities.push_back(new PathEntity(i, position));
 		entities.push_back(new Entity(i, position));
 		// create attribute entities with health and happiness
-		vector<ATTRIBUTE_VALUE> attributes = {std::make_pair(Attributes::Health, 100), std::make_pair(Attributes::Happiness, 50)};
-		attributeEntities.push_back(shared_ptr<AttributeEntity>(new AttributeEntity(i, attributes )));
+		vector<ATTRIBUTE_VALUE> attributes = {std::make_pair(Attributes::Health, 100), std::make_pair(Attributes::Happiness, 30)};
+		// Add a health decay here
+		AttributeFlow healthFlow;
+		healthFlow.addOutflow(LinearTransform(0.0, 2.0, FlowType::INFINITE));
+		healthFlow.addOutflow(LinearTransform(0.0, 2.0, FlowType::INFINITE));
+		vector<ATTRIBUTES_AND_FLOW> initialFlows = {make_pair(Attributes::Health, healthFlow)};
+		attributeEntities.push_back(shared_ptr<AttributeEntity>(new AttributeEntity(i, attributes, initialFlows)));
+	}
+
+	cout << "checking attributeEntity attributes: " << endl;
+	for (auto attributeEntity : attributeEntities) {
+		vector<ATTRIBUTE_VALUE> values;
+		attributeEntity->getCurrentAttributes(values);
+		for (auto value : values) {
+			Attributes attr; float curValue;
+			tie(attr, curValue) = value;
+			cout << "attr: " << (int)attr << " : " << curValue << endl;
+		}
 	}
 
 	std::vector<size_t> map;
@@ -512,8 +550,16 @@ int main(int argc, char** argv) {
 		//processWaitCallbacks(processNext, waitQueue);
 	//});
 
+	auto startTime = clock.now();
+
 	while(1) {
+
+		std::chrono::duration<double> elapsed = clock.now() - startTime;
 		processWaitCallbacks(processNext, waitQueue);
+
+		updateAttributeEntity(0.03333, attributeEntities);
+
+		startTime = clock.now();
 	}
 
 

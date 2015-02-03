@@ -99,6 +99,22 @@ TEST_F(AttributeTest, TestPickAdvert) {
 
 }
 
+//TEST_F(AttributeTest, TestGetCurrentAttributes) {
+//	using namespace std;
+//	using namespace wss;
+//	AttributeEntity oneEntity(0, oneEntityAttributes);
+//
+//	vector<ATTRIBUTE_VALUE> values;
+//	oneEntity.getCurrentAttributes(values);
+//
+//	for (auto& value : values) {
+//		Attributes attr; float curVal;
+//		tie(attr, curVal) = value;
+//	}
+//
+//
+//}
+
 TEST_F(AttributeTest, TestIntegrateAttributeFlow) {
 	// Test default parameter for ATTRIBUTES_AND_FLOW
 	vector<ATTRIBUTE_VALUE> testAttributes = {make_pair(Attributes::Health, 10.0f)};
